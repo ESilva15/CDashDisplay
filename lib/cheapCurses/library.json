@@ -1,0 +1,24 @@
+{
+  "name": "ili9488CursesUI",
+  "version": "0.1.1",
+  "description": "Simple UI for creating interfaces with the ili9488 and arduinos",
+  "keywords": "ili9488, pro micro, curses",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/ESilva15/ili9488CursesUI"
+  },
+  "authors":
+  [
+    {
+      "name": "Eduardo Silva",
+      "maintainer": true
+    }
+  ],
+  "dependencies": {
+    "Adafruit_GFX_Library": "~1.11.3",
+    "Adafruit_BusIO": "1.16.1"
+  },
+  "frameworks": "*",
+  "platforms": "*"
+}
