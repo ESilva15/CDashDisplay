@@ -6,6 +6,13 @@
 
 struct DashUI {
   UIString *rpmText;
+  UIString *speedText;
+  UIString *gearText;
+  UIString *bestLap;
+  UIString *lastLap;
+  UIString *curLap;
+  UIString *fuelTank;
+  UIString *fuelConsumption;
 
   DashUI();
   void dashUISetup(Arduino_GFX *gfx);

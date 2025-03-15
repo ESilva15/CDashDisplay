@@ -3,8 +3,8 @@
 #include "UIDecorations.h"
 #include "UIDrawing.h"
 #include "UIString.h"
-#include "backlightControl.h"
 #include "data.h"
+#include "displaySetup.h"
 #include "esp32-hal-psram.h"
 #include "ui.h"
 #include <Arduino.h>
@@ -15,9 +15,6 @@
 
 #define UART1_TX 19
 #define UART1_RX 18
-
-#define SCREEN_ORIENTATION 2
-#define SCREEN_LANDSCAPE // comment out for portrait
 
 Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
     40 /* DE */, 41 /* VSYNC */, 39 /* HSYNC */, 42 /* DCLK */, 45 /* R0 */,
@@ -31,12 +28,6 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
     0 /*pclk_idle_high*/
 );
 
-/* More display class:
- * https://github.com/moononournation/Arduino_GFX/wiki/Display-Class */
-// bus, DF_GFX_RST, 0 /* rotation */, false /* IPS */);
-/*Set to your screen resolution*/
-#define TFT_HOR_RES 800
-#define TFT_VER_RES 480
 //
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
@@ -45,26 +36,32 @@ HardwareSerial debugSerial(1);
 // UIelements
 DashUI *ui = new DashUI();
 UIDecorations *rpmTextDecor = new UIDecorations();
+UIDecorations *speedTextDecor = new UIDecorations();
+UIDecorations *gearTextDecor = new UIDecorations();
+UIDecorations *bestLapDecor = new UIDecorations();
+UIDecorations *lastLapDecor = new UIDecorations();
+UIDecorations *curLapDecor = new UIDecorations();
+UIDecorations *fuelTankDecor = new UIDecorations();
+UIDecorations *fuelConsumptionDecor = new UIDecorations();
 
-UIString rpmText(gfx, UIDimensions(37, 35, 333, 111), rpmTextDecor,
-                 (char *)"RPM");
+UIString rpmText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"RPM");
+UIString speedText(gfx, UIDimensions(0, 0, 0, 0), speedTextDecor,
+                   (char *)"Speed");
+UIString gearText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"Gear");
 
-void initialDisplaySetup() {
-  psramInit();
-  gfx->begin();
-  // gfx->setFont(u8g2_font_9x18_tf);
-
-  // Set screen & touch to the same rotation
-  debugSerial.println(F("* Setting up display"));
-  gfx->setRotation(SCREEN_ORIENTATION);
-  backlightSetup();
-  gfx->fillScreen(MAIN_BG_COLOR);
-  gfx->setTextColor(MAIN_FG_COLOR);
-}
+UIString bestLap(gfx, UIDimensions(0, 0, 0, 0), bestLapDecor,
+                 (char *)"Best Lap");
+UIString lastLap(gfx, UIDimensions(0, 0, 0, 0), lastLapDecor,
+                 (char *)"Last Lap");
+UIString curLap(gfx, UIDimensions(0, 0, 0, 0), curLapDecor, (char *)"Cur. Lap");
+UIString fuelTank(gfx, UIDimensions(0, 0, 0, 0), fuelTankDecor,
+                  (char *)"Fuel Tank");
+UIString fuelConsumption(gfx, UIDimensions(0, 0, 0, 0), fuelConsumptionDecor,
+                         (char *)"Fuel Consumption");
 
 void setup() {
-  // psramInit();
-  uint64_t start = millis();
+  psramInit();
+
   debugSerial.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
   Serial.begin(115200);
 
@@ -72,16 +69,88 @@ void setup() {
   debugSerial.println(F("=== ESP32 SimRacing DashDisplay ==="));
 
   debugSerial.println(F("* Initiating display"));
-  initialDisplaySetup();
+  initialDisplaySetup(gfx);
 
   // Setup the rpmText box
-  rpmTextDecor->textSize = 4;
+  rpmTextDecor->textSize = 7;
   rpmText.dims.height =
       calculateHeight(rpmTextDecor->titleSize, rpmTextDecor->textSize, 1);
   rpmText.dims.width = calculateWidth(rpmTextDecor->textSize, 5);
+  rpmText.horizontalCenter();
   ui->rpmText = &rpmText;
   ui->rpmText->drawBox();
   ui->rpmText->Update("12345");
+
+  // Setup the speedText box
+  speedTextDecor->textSize = 4;
+  speedText.dims.height =
+      calculateHeight(speedTextDecor->titleSize, speedTextDecor->textSize, 1);
+  speedText.dims.width = calculateWidth(speedTextDecor->textSize, 4);
+  speedText.placeRight(&rpmText);
+  ui->speedText = &speedText;
+  ui->speedText->drawBox();
+  ui->speedText->Update("253");
+
+  // Setup the gear text box
+  gearTextDecor->textSize = 7;
+  gearText.dims.height =
+      calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
+  gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
+  gearText.horizontalCenter();
+  gearText.dims.y = rpmText.dims.height + 5;
+  ui->gearText = &gearText;
+  ui->gearText->drawBox();
+  ui->gearText->Update("3");
+
+  // Setup the best lap box
+  bestLapDecor->textSize = 3;
+  bestLap.dims.height =
+      calculateHeight(bestLapDecor->titleSize, bestLapDecor->textSize, 1);
+  bestLap.dims.width = calculateWidth(bestLapDecor->textSize, 8);
+  ui->bestLap = &bestLap;
+  ui->bestLap->drawBox();
+  ui->bestLap->Update("01:24.39");
+
+  // Setup the last lap box
+  lastLapDecor->textSize = 3;
+  lastLap.dims.height =
+      calculateHeight(lastLapDecor->titleSize, lastLapDecor->textSize, 1);
+  lastLap.dims.width = calculateWidth(lastLapDecor->textSize, 8);
+  lastLap.placeBelow(&bestLap);
+  ui->lastLap = &lastLap;
+  ui->lastLap->drawBox();
+  ui->lastLap->Update("01:24.87");
+
+  // Setup the cur lap box
+  curLapDecor->textSize = 3;
+  curLap.dims.height =
+      calculateHeight(curLapDecor->titleSize, curLapDecor->textSize, 1);
+  curLap.dims.width = calculateWidth(curLapDecor->textSize, 8);
+  curLap.placeBelow(&lastLap);
+  ui->curLap = &curLap;
+  ui->curLap->drawBox();
+  ui->curLap->Update("00:54.21");
+
+  // Fuel tank
+  fuelTankDecor->textSize = 3;
+  fuelTank.dims.height =
+      calculateHeight(fuelTankDecor->titleSize, fuelTankDecor->textSize, 1);
+  fuelTank.dims.width = calculateWidth(fuelTankDecor->textSize, 12);
+  fuelTank.placeBelow(&curLap);
+  ui->fuelTank = &fuelTank;
+  ui->fuelTank->drawBox();
+  ui->fuelTank->Update("123 / 320");
+
+  // Fuel consumption
+  fuelConsumptionDecor->textSize = 3;
+  fuelConsumption.dims.height = calculateHeight(
+      fuelConsumptionDecor->titleSize, fuelConsumptionDecor->textSize, 1);
+  fuelConsumption.dims.width =
+      calculateWidth(fuelConsumptionDecor->textSize, 12);
+  fuelConsumption.placeBelow(&fuelTank);
+  ui->fuelConsumption = &fuelConsumption;
+  ui->fuelConsumption->drawBox();
+  ui->fuelConsumption->Update("10.4 | 11.2");
 }
 
 uint64_t lastDataRead = 0;
@@ -102,21 +171,6 @@ void loop(void) {
 
       // Reset the buffer index
       bufferIndex = 0;
-
-      // gfx->setCursor(20, 20);
-      // gfx->println(packet.speed);
-      // gfx->setCursor(20, 40);
-      // gfx->println(packet.rpm);
-      // gfx->setCursor(20, 60);
-      // gfx->println(packet.gear);
-      // gfx->setCursor(20, 80);
-      // gfx->println(packet.FuelEst);
-      // gfx->setCursor(20, 100);
-      // gfx->println(packet.LapNumber);
-      // gfx->setCursor(20, 120);
-      // gfx->println(packet.currLapTime);
-      // gfx->setCursor(20, 140);
-      // gfx->println(packet.lastLapTime);
 
       // Process the packet
       // if (millis() - lastDataPrint > 50) {

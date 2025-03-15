@@ -24,6 +24,8 @@ struct UIElement {
             char *Title);
   void drawBox();
   void replaceString(char *oldVal, char *newVal);
+
+  // Getters
   int16_t getContentAreaX0();
   int16_t getContentAreaY0();
   uint16_t getContentAreaHeight();
@@ -32,6 +34,11 @@ struct UIElement {
   int16_t getTitleAreaY0();
   uint16_t getTitleAreaHeight();
   uint16_t getTitleAreaWidth();
+
+  // Positioning
+  void horizontalCenter();
+  void placeBelow(UIElement *reference);
+  void placeRight(UIElement *reference);
 };
 
 #endif

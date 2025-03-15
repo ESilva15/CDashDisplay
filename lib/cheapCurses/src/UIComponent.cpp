@@ -1,5 +1,6 @@
 #include "UIComponent.h"
 // #include "u8g2.h"
+#include "Arduino.h"
 #include "UIDrawing.h"
 // #include <U8g2lib.h>
 #include <cstdint>
@@ -45,6 +46,16 @@ uint16_t UIElement::getTitleAreaHeight() {
   return h;
 }
 
+uint16_t UIElement::getTitleAreaWidth() {
+  int16_t x = 0, y = 0;
+  uint16_t w = 0, h = 0;
+
+  this->display->setTextSize(this->decor->titleSize);
+  this->display->getTextBounds((const char *)this->title, 0, 0, &x, &y, &w, &h);
+
+  return w;
+}
+
 void UIElement::drawBox() {
   // This is the border rectangle
   for (int k = 0; k < DEFAULT_BORDER_THICKNESS; k++) {
@@ -63,8 +74,12 @@ void UIElement::drawBox() {
   // int ascent = u8g2.getAscent();
 
   h = this->getTitleAreaHeight();
+  uint16_t titleAreaWidth = this->getTitleAreaWidth();
   int16_t titleTopLeftX = this->getTitleAreaX0();
-  this->display->drawRect(titleTopLeftX, this->getTitleAreaY0(), w, h, BLUE);
+#ifdef DEBUG
+  this->display->drawRect(titleTopLeftX, this->getTitleAreaY0(), titleAreaWidth,
+                          h, BLUE);
+#endif
 
   // content area
   x = this->getContentAreaX0();
@@ -72,8 +87,16 @@ void UIElement::drawBox() {
   w = this->getContentAreaWidth();
   h = this->getContentAreaHeight();
 
-  this->display->drawRect(x, y, w, h, BLUE);
+#ifdef DEBUG
+1 this->display->drawRect(x, y, w, h, BLUE);
+#endif
 
+  // Remove the border line behind the title
+  this->display->fillRect(titleTopLeftX - DEFAULT_MARGIN, this->dims.y,
+                          titleAreaWidth + DEFAULT_MARGIN,
+                          DEFAULT_BORDER_THICKNESS, MAIN_BG_COLOR);
+
+  // Render the title
   this->display->setCursor(titleTopLeftX, this->dims.y);
   this->display->print(this->title);
 }
