@@ -3,7 +3,9 @@
 #include "UIDecorations.h"
 #include "UIDrawing.h"
 #include "UIString.h"
+#include "UITable.h"
 #include "data.h"
+#include "debug/debug.h"
 #include "displaySetup.h"
 #include "esp32-hal-psram.h"
 #include "ui.h"
@@ -11,7 +13,6 @@
 #include <Arduino_GFX_Library.h>
 #include <cstdint>
 #include <cstring>
-// #include <U8g2lib.h>
 
 #define UART1_TX 19
 #define UART1_RX 18
@@ -31,7 +32,7 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
 //
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
-HardwareSerial debugSerial(1);
+// HardwareSerial debugSerial(1);
 
 // UIelements
 DashUI *ui = new DashUI();
@@ -43,6 +44,7 @@ UIDecorations *lastLapDecor = new UIDecorations();
 UIDecorations *curLapDecor = new UIDecorations();
 UIDecorations *fuelTankDecor = new UIDecorations();
 UIDecorations *fuelConsumptionDecor = new UIDecorations();
+UIDecorations *relativeDecor = new UIDecorations();
 
 UIString rpmText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"RPM");
 UIString speedText(gfx, UIDimensions(0, 0, 0, 0), speedTextDecor,
@@ -58,18 +60,25 @@ UIString fuelTank(gfx, UIDimensions(0, 0, 0, 0), fuelTankDecor,
                   (char *)"Fuel Tank");
 UIString fuelConsumption(gfx, UIDimensions(0, 0, 0, 0), fuelConsumptionDecor,
                          (char *)"Fuel Consumption");
+UITable relative(gfx, UIDimensions(250, 250, 0, 0), relativeDecor,
+                 (char *)"Relative");
 
 void setup() {
   psramInit();
-
-  debugSerial.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
   Serial.begin(115200);
 
-  // Serial.begin(115200);
-  debugSerial.println(F("=== ESP32 SimRacing DashDisplay ==="));
+  // Initialize the debug serial object
+  Serial2.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
 
-  debugSerial.println(F("* Initiating display"));
+  Serial2.println(F("=== ESP32 SimRacing DashDisplay ==="));
+
+  Serial2.println(F("* Initiating display"));
   initialDisplaySetup(gfx);
+
+  // Setup the relative
+  relativeDecor->textSize = 2;
+  relative.setup();
+  relative.drawBox();
 
   // Setup the rpmText box
   rpmTextDecor->textSize = 7;
