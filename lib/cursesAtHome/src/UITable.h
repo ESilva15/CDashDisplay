@@ -20,7 +20,6 @@ struct UITable : UIElement {
   UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor, char *t);
 
   // void Update(StandingLine standings[5]);
-  void initDimensions();
   void setup();
 
   // Getters

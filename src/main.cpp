@@ -77,6 +77,10 @@ void setup() {
 
   // Setup the relative
   relativeDecor->textSize = 2;
+  relative.dims.x = gfx->width() - relative.dims.width;
+  relative.dims.y = gfx->height() - relative.dims.height;
+  // relative.dims.x = 250;
+  // relative.dims.y = 250;
   relative.setup();
   relative.drawBox();
 

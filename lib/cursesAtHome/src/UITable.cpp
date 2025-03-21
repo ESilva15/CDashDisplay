@@ -2,6 +2,7 @@
 #include "HardwareSerial.h"
 #include "UIDecorations.h"
 #include "UIDrawing.h"
+#include <cstdint>
 
 #define DEBUG
 
@@ -12,6 +13,8 @@ UITable::UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor,
 
   // Default decoration for every cell
   UIDecorations *cellDecor = new UIDecorations();
+  cellDecor->textSize = 2;
+  this->decor->textSize = 2;
 
   for (int k = 0; k < ROWS * COLUMNS; k++) {
     this->tableData[k].decor = cellDecor;
@@ -21,6 +24,15 @@ UITable::UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor,
     this->tableData[k].dims.height = 0;
     this->tableData[k].display = this->display;
   }
+
+  int cellH = CHR_HEIGHT(this->decor->textSize) + CELL_MARGIN;
+
+  // Initialize the table dimensions
+  this->dims.height = ROWS * cellH + this->getTitleAreaHeight() +
+                      DEFAULT_MARGIN + DEFAULT_BORDER_THICKNESS;
+  this->dims.width =
+      (DEFAULT_BORDER_THICKNESS + DEFAULT_MARGIN) * 2 +
+      (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN) * (3 + 24 + 5);
 }
 
 uint16_t UITable::getContentAreaHeight() {
@@ -35,9 +47,9 @@ uint16_t UITable::getContentAreaHeight() {
  */
 void UITable::setup() {
   // Define the cell dimensions
-  int tableCellW[] = {3 * (CHR_WIDTH(this->decor->textSize) + 2),
-                      24 * (CHR_WIDTH(this->decor->textSize) + 2),
-                      5 * (CHR_WIDTH(this->decor->textSize) + 2)};
+  int tableCellW[] = {3 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN),
+                      24 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN),
+                      5 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN)};
   int cellH = CHR_HEIGHT(this->decor->textSize) + CELL_MARGIN;
 
   // Initialize the cells
@@ -60,15 +72,4 @@ void UITable::setup() {
 #endif
     }
   }
-
-  // Initialize the table dimensions
-  this->dims.height = ROWS * cellH + this->getTitleAreaHeight();
-  this->dims.width =
-      (3 + 24 + 5 + CELL_MARGIN) * CHR_WIDTH(this->decor->textSize);
-}
-
-void UITable::initDimensions() {
-  // Calculate the height
-
-  // Calculate the width
 }
