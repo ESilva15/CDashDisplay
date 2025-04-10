@@ -3,12 +3,23 @@
 
 #include <stdint.h>
 
+struct DataReq {
+  uint8_t type;
+};
+
+const int speedLen = 5;
+const int gearLen = 3;
+const int rpmLen = 6;
+const int lapNumberLen = 5;
+const int currLapTimeLen = 10;
+const int lastLapTimeLen = 10;
 const int DriverNameLen = 24;
 const int TimeBehindStringLen = 16;
 const int LapStringLen = 4;
 const int FuelTankLen = 15;
 const int FuelEstLen = 15;
 
+#pragma pack(push, 1)
 struct StandingLine {
   char Lap[LapStringLen];
   char DriverName[DriverNameLen];
@@ -16,18 +27,19 @@ struct StandingLine {
 };
 
 struct DataPacket {
-  int32_t speed;
-  int32_t gear;
-  int32_t rpm;
-  char LapNumber[5];
-  // char lapDelta[10];
-  char currLapTime[10];
-  // char bestLapTime[10];
-  char lastLapTime[10];
-  // char FuelTank[FuelTankLen];
+  uint8_t StartMarker;
+  char speed[speedLen];
+  char gear[gearLen];
+  char rpm[rpmLen];
+  char LapNumber[lapNumberLen];
+  char currLapTime[currLapTimeLen];
+  char lastLapTime[lastLapTimeLen];
   char FuelEst[FuelEstLen];
-  // int32_t position;
   StandingLine standings[5];
+  uint8_t EndMarker;
 };
+#pragma pack(pop)
+
+void SerializeDataPacket(DataPacket *p, uint8_t *buffer);
 
 #endif

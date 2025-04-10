@@ -15,7 +15,7 @@ struct UITable : UIElement {
   // will hold rows * columns UIStrings to fill the table
   int rows = ROWS;
   int columns = COLUMNS;
-  UIString tableData[ROWS * COLUMNS];
+  UIString **tableData;
 
   UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor, char *t);
 

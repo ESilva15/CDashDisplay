@@ -5,7 +5,7 @@
 
 // Representation of single line strings
 struct UIString : UIElement {
-  static const size_t bufferSize = 256;
+  static const size_t bufferSize = 64;
   char value[bufferSize];
 
   UIString();

@@ -25,15 +25,6 @@ int16_t UIElement::getContentAreaX0() {
 
 int16_t UIElement::getContentAreaY0() {
   if (this->decor->hasBorder) {
-    Serial2.print("Value to return: ");
-    Serial2.print(this->dims.y);
-    Serial2.print(" + ");
-    Serial2.print(this->getTitleAreaHeight());
-    Serial2.print(" + ");
-    Serial2.print(DEFAULT_TITLE_CONTENT_SPACING);
-    Serial2.print(" = ");
-    Serial2.println(this->dims.y + this->getTitleAreaHeight() +
-                    DEFAULT_TITLE_CONTENT_SPACING);
     return this->dims.y + this->getTitleAreaHeight() +
            DEFAULT_TITLE_CONTENT_SPACING;
   }
@@ -80,8 +71,10 @@ void UIElement::replaceString(char *oldVal, char *newVal) {
   size_t newValLen = strlen(newVal);
   size_t oldValLen = strlen(oldVal);
 
+  // It crashs somewhere around here
   int16_t x0 = this->getContentAreaX0();
-  int16_t y0 = this->getContentAreaY0();
+  int16_t y0 = this->getContentAreaY0(); // <- Crashes here
+  // Before here
 
   this->display->setTextSize(this->decor->textSize);
 

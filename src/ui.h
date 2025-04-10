@@ -3,16 +3,18 @@
 
 #include "Arduino_GFX.h"
 #include "UIString.h"
+#include "UITable.h"
 
 struct DashUI {
-  UIString *rpmText;
-  UIString *speedText;
-  UIString *gearText;
+  UIString *digiTacho;
+  UIString *digiSpeedo;
+  UIString *digiGear;
   UIString *bestLap;
   UIString *lastLap;
   UIString *curLap;
   UIString *fuelTank;
   UIString *fuelConsumption;
+  UITable *relative;
 
   DashUI();
   void dashUISetup(Arduino_GFX *gfx);
