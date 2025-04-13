@@ -48,6 +48,7 @@ DashUI *ui = new DashUI();
 UIDecorations *rpmTextDecor = new UIDecorations();
 UIDecorations *speedTextDecor = new UIDecorations();
 UIDecorations *gearTextDecor = new UIDecorations();
+UIDecorations *lapDeltaDecor = new UIDecorations();
 UIDecorations *bestLapDecor = new UIDecorations();
 UIDecorations *lastLapDecor = new UIDecorations();
 UIDecorations *curLapDecor = new UIDecorations();
@@ -60,6 +61,8 @@ UIString speedText(gfx, UIDimensions(0, 0, 0, 0), speedTextDecor,
                    (char *)"Speed");
 UIString gearText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"Gear");
 
+UIString lapDelta(gfx, UIDimensions(0, 0, 0, 0), lapDeltaDecor,
+                  (char *)"Delta");
 UIString bestLap(gfx, UIDimensions(0, 0, 0, 0), bestLapDecor,
                  (char *)"Best Lap");
 UIString lastLap(gfx, UIDimensions(0, 0, 0, 0), lastLapDecor,
@@ -69,8 +72,6 @@ UIString fuelTank(gfx, UIDimensions(0, 0, 0, 0), fuelTankDecor,
                   (char *)"Fuel Tank");
 UIString fuelConsumption(gfx, UIDimensions(0, 0, 0, 0), fuelConsumptionDecor,
                          (char *)"Fuel Consumption");
-UITable relative(gfx, UIDimensions(250, 250, 0, 0), relativeDecor,
-                 (char *)"Relative");
 
 void setup() {
   psramInit();
@@ -86,14 +87,20 @@ void setup() {
   initialDisplaySetup(gfx);
 
   // Setup the relative
+  // Define the width of the columns in number of chars
+  int *colW = (int *)malloc(sizeof(int) * 3);
+  colW[0] = 3;
+  colW[1] = 18;
+  colW[2] = 9;
+  UITable *relative =
+      new UITable(gfx, UIDimensions(250, 250, 0, 0), relativeDecor, 5, 3, colW,
+                  (char *)"Relative");
   relativeDecor->textSize = 2;
-  relative.dims.x = gfx->width() - relative.dims.width;
-  relative.dims.y = gfx->height() - relative.dims.height;
-  // relative.dims.x = 250;
-  // relative.dims.y = 250;
-  relative.setup();
-  relative.drawBox();
-  ui->relative = &relative;
+  relative->dims.x = gfx->width() - relative->dims.width;
+  relative->dims.y = gfx->height() - relative->dims.height;
+  relative->setup();
+  relative->drawBox();
+  ui->relative = relative;
 
   // Setup the rpmText box
   rpmTextDecor->textSize = 7;
@@ -103,7 +110,7 @@ void setup() {
   rpmText.horizontalCenter();
   ui->digiTacho = &rpmText;
   ui->digiTacho->drawBox();
-  ui->digiTacho->Update("12345");
+  ui->digiTacho->Update("-----");
 
   // Setup the speedText box
   speedTextDecor->textSize = 4;
@@ -113,7 +120,7 @@ void setup() {
   speedText.placeRight(&rpmText);
   ui->digiSpeedo = &speedText;
   ui->digiSpeedo->drawBox();
-  ui->digiSpeedo->Update("253");
+  ui->digiSpeedo->Update("---");
 
   // Setup the gear text box
   gearTextDecor->textSize = 7;
@@ -124,7 +131,17 @@ void setup() {
   gearText.dims.y = rpmText.dims.height + 5;
   ui->digiGear = &gearText;
   ui->digiGear->drawBox();
-  ui->digiGear->Update("3");
+  ui->digiGear->Update("-");
+
+  // Setup the lap delta box
+  lapDeltaDecor->textSize = 3;
+  lapDelta.dims.height =
+      calculateHeight(lapDeltaDecor->titleSize, lapDeltaDecor->textSize, 1);
+  lapDelta.dims.width = calculateWidth(lapDeltaDecor->textSize, 6);
+  lapDelta.placeBelow(&gearText);
+  ui->lapDelta = &lapDelta;
+  ui->lapDelta->drawBox();
+  ui->lapDelta->Update("--.-");
 
   // Setup the best lap box
   bestLapDecor->textSize = 3;
@@ -133,7 +150,7 @@ void setup() {
   bestLap.dims.width = calculateWidth(bestLapDecor->textSize, 8);
   ui->bestLap = &bestLap;
   ui->bestLap->drawBox();
-  ui->bestLap->Update("01:24.39");
+  ui->bestLap->Update("--:--.--");
 
   // Setup the last lap box
   lastLapDecor->textSize = 3;
@@ -143,7 +160,7 @@ void setup() {
   lastLap.placeBelow(&bestLap);
   ui->lastLap = &lastLap;
   ui->lastLap->drawBox();
-  ui->lastLap->Update("01:24.87");
+  ui->lastLap->Update("--:--.--");
 
   // Setup the cur lap box
   curLapDecor->textSize = 3;
@@ -153,7 +170,7 @@ void setup() {
   curLap.placeBelow(&lastLap);
   ui->curLap = &curLap;
   ui->curLap->drawBox();
-  ui->curLap->Update("00:54.21");
+  ui->curLap->Update("--:--.--");
 
   // Fuel tank
   fuelTankDecor->textSize = 3;
@@ -163,7 +180,7 @@ void setup() {
   fuelTank.placeBelow(&curLap);
   ui->fuelTank = &fuelTank;
   ui->fuelTank->drawBox();
-  ui->fuelTank->Update("123 / 320");
+  ui->fuelTank->Update("--- / ---");
 
   // Fuel consumption
   fuelConsumptionDecor->textSize = 3;
@@ -174,7 +191,7 @@ void setup() {
   fuelConsumption.placeBelow(&fuelTank);
   ui->fuelConsumption = &fuelConsumption;
   ui->fuelConsumption->drawBox();
-  ui->fuelConsumption->Update("10.4 | 11.2");
+  ui->fuelConsumption->Update("--.- | --.-");
 
   // const char *words[] = {"hel", "wor", "why", "is", "thi", "hap", "to",
   // "me"};

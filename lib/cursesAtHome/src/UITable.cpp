@@ -7,11 +7,14 @@
 #define DEBUG
 
 UITable::UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor,
-                 char *title)
+                 int nRows, int nCols, int *colWidths, char *title)
     : UIElement(gfx, dims, decor, title) {
   this->type = TABLE;
-  this->tableData = new UIString*[ROWS * COLUMNS];
-  
+  this->nRows = nRows;
+  this->nColumns = nCols;
+  this->tableData = new UIString *[this->nRows * this->nColumns];
+  this->colWidths = colWidths;
+
   // Default decoration for every cell
   this->decor->textSize = 2;
 
@@ -27,11 +30,16 @@ UITable::UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor,
   int cellH = CHR_HEIGHT(this->decor->textSize) + CELL_MARGIN;
 
   // Initialize the table dimensions
+  //// Calculate the height
   this->dims.height = ROWS * cellH + this->getTitleAreaHeight() +
                       DEFAULT_MARGIN + DEFAULT_BORDER_THICKNESS;
-  this->dims.width =
-      (DEFAULT_BORDER_THICKNESS + DEFAULT_MARGIN) * 2 +
-      (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN) * (3 + 18 + 12);
+
+  //// Calculate the width
+  for (int c = 0; c < this->nColumns; c++) {
+    this->dims.width +=
+        (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN) * this->colWidths[c];
+  }
+  this->dims.width += (DEFAULT_BORDER_THICKNESS + DEFAULT_MARGIN) * 2;
 }
 
 uint16_t UITable::getContentAreaHeight() {
@@ -39,16 +47,11 @@ uint16_t UITable::getContentAreaHeight() {
          this->getTitleAreaHeight();
 }
 
-/* Very shitty hardcoded function to get this going, only works for th
- * relative
- * POS NAME DELTA
- * 3 | 24 | 5
+/* 
+ * This was hardcoded for the relative and had a warning for that but
+ * I recon its dynamic enough for now
  */
 void UITable::setup() {
-  // Define the cell dimensions
-  int tableCellW[] = {3 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN),
-                      18 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN),
-                      12 * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN)};
   int cellH = CHR_HEIGHT(this->decor->textSize) + CELL_MARGIN;
 
   // Initialize the cells
@@ -61,11 +64,13 @@ void UITable::setup() {
       this->tableData[r * COLUMNS + c]->dims.x = xOffset + CELL_MARGIN;
       this->tableData[r * COLUMNS + c]->dims.y = (cellH * r) + yOffset;
       this->tableData[r * COLUMNS + c]->dims.height = cellH;
-      this->tableData[r * COLUMNS + c]->dims.width = tableCellW[c];
+      this->tableData[r * COLUMNS + c]->dims.width =
+          this->colWidths[c] * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN);
       memset(this->tableData[r * COLUMNS + c]->value, 0,
              this->tableData[r * COLUMNS + c]->bufferSize);
 
-      xOffset += tableCellW[c];
+      xOffset +=
+          this->colWidths[c] * (CHR_WIDTH(this->decor->textSize) + CELL_MARGIN);
 
 #ifdef DEBUG
       this->tableData[r * COLUMNS + c]->drawBox();

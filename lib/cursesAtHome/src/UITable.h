@@ -13,11 +13,13 @@
  */
 struct UITable : UIElement {
   // will hold rows * columns UIStrings to fill the table
-  int rows = ROWS;
-  int columns = COLUMNS;
+  int nRows = 0;
+  int nColumns = 0;
+  int *colWidths;
   UIString **tableData;
 
-  UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor, char *t);
+  UITable(Arduino_GFX *gfx, UIDimensions dims, UIDecorations *decor, int nR,
+          int nC, int *cWidth, char *t);
 
   // void Update(StandingLine standings[5]);
   void setup();

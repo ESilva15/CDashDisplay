@@ -10,6 +10,7 @@ struct DashUI {
   UIString *digiTacho;
   UIString *digiSpeedo;
   UIString *digiGear;
+  UIString *lapDelta;
   UIString *bestLap;
   UIString *lastLap;
   UIString *curLap;

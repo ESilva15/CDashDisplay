@@ -1,6 +1,4 @@
 #include "ui.h"
-
-#include "UIDecorations.h"
 #include "data.h"
 
 DashUI::DashUI() {}
@@ -9,6 +7,8 @@ void DashUI::Update(DataPacket *p) {
   this->digiSpeedo->Update(p->speed);
   this->digiTacho->Update(p->rpm);
   this->digiGear->Update(p->gear);
+  this->lapDelta->Update(p->DeltaToBestLap);
+  this->bestLap->Update(p->bestLapTime);
   this->curLap->Update(p->currLapTime);
   this->lastLap->Update(p->lastLapTime);
   this->fuelConsumption->Update(p->FuelEst);
