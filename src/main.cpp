@@ -1,3 +1,12 @@
+/*
+ESP32-8048S043 based DashDisplay for simracing and stuff
+by Eduardo Silva and others
+
+TODO:
+- Add a better communication mechanism that allows the desktop interface
+to have more ways to run analytics
+*/
+
 #include "Arduino_GFX.h"
 #include "HardwareSerial.h"
 #include "UIDecorations.h"
@@ -5,10 +14,8 @@
 #include "UIString.h"
 #include "UITable.h"
 #include "data.h"
-#include "debug/debug.h"
 #include "displaySetup.h"
 #include "esp32-hal-psram.h"
-#include "esp_system.h"
 #include "ui.h"
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
@@ -101,8 +108,7 @@ void setup() {
   // Setup the speedText box
   speedTextDecor->textSize = 4;
   speedText.dims.height =
-      calculateHeight(speedTextDecor->titleSize, speedTextDecor->textSize,
-      1);
+      calculateHeight(speedTextDecor->titleSize, speedTextDecor->textSize, 1);
   speedText.dims.width = calculateWidth(speedTextDecor->textSize, 4);
   speedText.placeRight(&rpmText);
   ui->digiSpeedo = &speedText;
@@ -170,35 +176,6 @@ void setup() {
   ui->fuelConsumption->drawBox();
   ui->fuelConsumption->Update("10.4 | 11.2");
 
-  // Connect to ESDI
-  // Serial2.println("Waiting for ESDI signal");
-  // uint8_t buffer[sizeof(DataReq)];
-  // size_t bufferIndex = 0;
-  // bool ready = false;
-  // while (!ready) {
-  //   while (Serial.available() > 0) {
-  //     buffer[bufferIndex] = Serial.read();
-  //     bufferIndex++;
-  //
-  //     if (bufferIndex >= sizeof(DataReq)) {
-  //       // Copy the buffer into the struct
-  //       DataReq packet;
-  //       memcpy(&packet, buffer, sizeof(DataReq));
-  //
-  //       // Reset the buffer index
-  //       bufferIndex = 0;
-  //
-  //       Serial2.print("Received msg from ESDI: ");
-  //       Serial2.println(packet.type);
-  //
-  //       if (packet.type == 3) {
-  //         ready = true;
-  //         break;
-  //       }
-  //     }
-  //   }
-  // }
-
   // const char *words[] = {"hel", "wor", "why", "is", "thi", "hap", "to",
   // "me"};
   //
@@ -218,100 +195,18 @@ void setup() {
 }
 
 uint64_t lastDataRead = 0;
-uint8_t packetBuffer[sizeof(DataPacket)];
-int bufferIndex = 0;
-
-void debugDataPacket(DataPacket *p) {
-  Serial2.printf("\rSize:        %zu\n", sizeof(struct DataPacket));
-  Serial2.printf("\rStartMarker: 0x%02x\n", p->StartMarker);
-  Serial2.printf("\rSpeed:       %s\n", p->speed);
-  Serial2.printf("\rGear:        %s\n", p->gear);
-  Serial2.printf("\rRPM:         %s\n", p->rpm);
-  Serial2.printf("\rLapNumber:   %s\n", p->LapNumber);
-  Serial2.printf("\rcurrLapTime: %s\n", p->currLapTime);
-  Serial2.printf("\rlastLapTime: %s\n", p->lastLapTime);
-  Serial2.printf("\rfuelEst:     %s\n", p->FuelEst);
-  Serial2.printf("\rStandings:\n");
-  for (int k = 0; k < 5; k++) {
-    Serial2.printf("\r  Lap:         %s\n", p->standings[k].Lap);
-    Serial2.printf("\r  DriverName:  %s\n", p->standings[k].DriverName);
-    Serial2.printf("\r  TimeBehind:  %s\n", p->standings[k].TimeBehindString);
-  }
-  Serial2.printf("\rEndMarker:   0x%02x\n\n", p->EndMarker);
-}
-
-bool isReceiving = false;
 void loop(void) {
   // Request data here
-  DataReq req = {5};
-  Serial.write((uint8_t *)&req, sizeof(req));
-  Serial.flush();
+  SendDataRequest();
 
   // Receive data
-  while (Serial.available() > 0) {
-    uint8_t byte = Serial.read();
+  DataPacket telemetryPacket;
+  int res = RecvDataPacket(&telemetryPacket);
 
-    if (!isReceiving) {
-      if (byte == 0x02) {
-        isReceiving = true;
-        bufferIndex = 0;
-      }
-    }
-    packetBuffer[bufferIndex++] = byte;
+  if (res == 0) {
+    ui->Update(&telemetryPacket);
 
-    if (bufferIndex >= sizeof(DataPacket)) {
-      Serial.flush();
-      bufferIndex = 0;
-      isReceiving = false;
-
-      DataPacket packet;
-      // SerializeDataPacket(&packet, packetBuffer);
-      memcpy(&packet, packetBuffer, sizeof(DataPacket));
-
-      if (packet.EndMarker != 0x03) {
-        // Serial2.println(F("\r////////////// DATA IS MALFORMED
-        // //////////////"));
-        continue;
-      }
-      // for(int k = 0; k < sizeof(DataPacket); k++) {
-      //   if (k % 8 == 0) {
-      //     Serial2.printf("\r\n");
-      //   }
-      //   Serial2.printf(" 0x%02x", packetBuffer[k]);
-      // }
-      // Serial2.printf("\r\n");
-
-      // Serial2.printf("%d / %d [%2d] || %d / %d [%2d]\n\n\r",
-      // ESP.getFreeHeap(),
-      //                ESP.getHeapSize(),
-      //                (int)(((float)(ESP.getHeapSize() - ESP.getFreeHeap()) /
-      //                       ESP.getHeapSize()) *
-      //                      100),
-      //                ESP.getFreePsram(), ESP.getPsramSize(),
-      //                (int)(((float)(ESP.getPsramSize() - ESP.getFreePsram())
-      //                /
-      //                       ESP.getPsramSize()) *
-      //                      100));
-
-      // debugDataPacket(&packet);
-
-      ui->digiSpeedo->Update(packet.speed);
-      ui->digiTacho->Update(packet.rpm);
-      ui->digiGear->Update(packet.gear);
-      ui->curLap->Update(packet.currLapTime);
-      ui->lastLap->Update(packet.lastLapTime);
-
-      for (int row = 0; row < ROWS; row++) {
-        ui->relative->tableData[row * COLUMNS + 0]->Update(
-            packet.standings[row].Lap);
-        ui->relative->tableData[row * COLUMNS + 1]->Update(
-            packet.standings[row].DriverName);
-        ui->relative->tableData[row * COLUMNS + 2]->Update(
-            packet.standings[row].TimeBehindString);
-      }
-
-      lastDataRead = millis();
-    }
+    lastDataRead = millis();
   }
 
   // If no data is received for 5 seconds, reset the display

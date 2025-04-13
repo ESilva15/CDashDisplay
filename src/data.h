@@ -40,6 +40,8 @@ struct DataPacket {
 };
 #pragma pack(pop)
 
-void SerializeDataPacket(DataPacket *p, uint8_t *buffer);
+void DebugDataPacket(DataPacket *p);
+int RecvDataPacket(DataPacket *p);
+void SendDataRequest();
 
 #endif

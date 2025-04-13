@@ -4,6 +4,7 @@
 #include "Arduino_GFX.h"
 #include "UIString.h"
 #include "UITable.h"
+#include "data.h"
 
 struct DashUI {
   UIString *digiTacho;
@@ -17,7 +18,7 @@ struct DashUI {
   UITable *relative;
 
   DashUI();
-  void dashUISetup(Arduino_GFX *gfx);
+  void Update(DataPacket *p);
 };
 
 #endif
