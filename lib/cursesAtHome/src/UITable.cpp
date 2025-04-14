@@ -47,7 +47,7 @@ uint16_t UITable::getContentAreaHeight() {
          this->getTitleAreaHeight();
 }
 
-/* 
+/*
  * This was hardcoded for the relative and had a warning for that but
  * I recon its dynamic enough for now
  */
@@ -59,6 +59,7 @@ void UITable::setup() {
   for (int r = 0; r < ROWS; r++) {
     int16_t xOffset = this->getContentAreaX0();
     for (int c = 0; c < COLUMNS; c++) {
+      this->tableData[r * COLUMNS + c]->refreshRate = this->refreshRate;
       this->tableData[r * COLUMNS + c]->decor->textSize = this->decor->textSize;
       this->tableData[r * COLUMNS + c]->decor->hasBorder = false;
       this->tableData[r * COLUMNS + c]->dims.x = xOffset + CELL_MARGIN;

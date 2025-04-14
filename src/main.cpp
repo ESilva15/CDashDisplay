@@ -22,6 +22,8 @@ to have more ways to run analytics
 #include <cstdint>
 #include <cstring>
 #include <unistd.h>
+// #include <nvs.h>
+// #include <nvs_flash.h>
 
 #define UART1_TX 19
 #define UART1_RX 18
@@ -81,9 +83,9 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
   Serial2.flush();
 
-  Serial2.println(F("=== ESP32 SimRacing DashDisplay ==="));
+  Serial2.print(F("\r=== ESP32 SimRacing DashDisplay ===\r\n"));
 
-  Serial2.println(F("* Initiating display"));
+  Serial2.print(F("* Initiating display\r\n"));
   initialDisplaySetup(gfx);
 
   // Setup the relative
@@ -98,6 +100,7 @@ void setup() {
   relativeDecor->textSize = 2;
   relative->dims.x = gfx->width() - relative->dims.width;
   relative->dims.y = gfx->height() - relative->dims.height;
+  relative->refreshRate = 750;
   relative->setup();
   relative->drawBox();
   ui->relative = relative;
@@ -207,6 +210,12 @@ void setup() {
   //     }
   //   }
   // }
+
+  // nvs_handle_t handle;
+  // nvs_open("storage", NVS_READWRITE, &handle);
+  // nvs_set_i32(handle, "counter", 42);
+  // nvs_commit(handle);
+  // nvs_close(handle);
 
   Serial2.println("* Ready for loop");
 }
