@@ -12,6 +12,7 @@ void DashUI::Update(DataPacket *p) {
   this->curLap->Update(p->currLapTime);
   this->lastLap->Update(p->lastLapTime);
   this->fuelConsumption->Update(p->FuelEst);
+  this->brakeBias->Update(p->brakeBias);
 
   for (int row = 0; row < ROWS; row++) {
     this->relative->tableData[row * COLUMNS + 0]->Update(p->standings[row].Lap);

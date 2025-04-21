@@ -7,14 +7,20 @@ struct DataReq {
   uint8_t type;
 };
 
+// Car data
 const int speedLen = 5;
 const int gearLen = 3;
 const int rpmLen = 6;
+const int brakeBiasLen = 6;
+
+// Lap data
 const int lapNumberLen = 5;
 const int DeltaToBestLapLen = 6;
 const int bestLapTimeLen = 10;
 const int currLapTimeLen = 10;
 const int lastLapTimeLen = 10;
+
+// Fuel data
 const int FuelTankLen = 15;
 const int FuelEstLen = 15;
 
@@ -34,6 +40,7 @@ struct DataPacket {
   char speed[speedLen];
   char gear[gearLen];
   char rpm[rpmLen];
+  char brakeBias[brakeBiasLen];
   char LapNumber[lapNumberLen];
   char DeltaToBestLap[DeltaToBestLapLen];
   char bestLapTime[bestLapTimeLen];

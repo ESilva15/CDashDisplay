@@ -16,6 +16,7 @@ struct DashUI {
   UIString *curLap;
   UIString *fuelTank;
   UIString *fuelConsumption;
+  UIString *brakeBias;
   UITable *relative;
 
   DashUI();

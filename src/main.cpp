@@ -56,6 +56,7 @@ UIDecorations *lastLapDecor = new UIDecorations();
 UIDecorations *curLapDecor = new UIDecorations();
 UIDecorations *fuelTankDecor = new UIDecorations();
 UIDecorations *fuelConsumptionDecor = new UIDecorations();
+UIDecorations *brakeBiasDecor = new UIDecorations();
 UIDecorations *relativeDecor = new UIDecorations();
 
 UIString rpmText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"RPM");
@@ -74,6 +75,8 @@ UIString fuelTank(gfx, UIDimensions(0, 0, 0, 0), fuelTankDecor,
                   (char *)"Fuel Tank");
 UIString fuelConsumption(gfx, UIDimensions(0, 0, 0, 0), fuelConsumptionDecor,
                          (char *)"Fuel Consumption");
+UIString brakeBias(gfx, UIDimensions(0, 0, 0, 0), brakeBiasDecor,
+                   (char *)"Brakes");
 
 void setup() {
   psramInit();
@@ -195,6 +198,16 @@ void setup() {
   ui->fuelConsumption = &fuelConsumption;
   ui->fuelConsumption->drawBox();
   ui->fuelConsumption->Update("--.- | --.-");
+
+  // Brake bias
+  brakeBiasDecor->textSize = 3;
+  brakeBias.dims.height =
+      calculateHeight(brakeBiasDecor->titleSize, brakeBiasDecor->textSize, 1);
+  brakeBias.dims.width = calculateWidth(brakeBiasDecor->textSize, 5);
+  brakeBias.placeBelow(&fuelConsumption);
+  ui->brakeBias = &brakeBias;
+  ui->brakeBias->drawBox();
+  ui->brakeBias->Update("--.-");
 
   // const char *words[] = {"hel", "wor", "why", "is", "thi", "hap", "to",
   // "me"};
