@@ -1,11 +1,14 @@
 #include "ui.h"
+#include "HardwareSerial.h"
 #include "data.h"
+#include <cstdint>
 
 DashUI::DashUI() {}
 
 void DashUI::Update(DataPacket *p) {
-  this->digiSpeedo->Update(p->speed);
+  this->barTacho->Update(p->rpm);
   this->digiTacho->Update(p->rpm);
+  this->digiSpeedo->Update(p->speed);
   this->digiGear->Update(p->gear);
   this->lapDelta->Update(p->DeltaToBestLap);
   this->bestLap->Update(p->bestLapTime);

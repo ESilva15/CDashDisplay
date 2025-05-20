@@ -4,9 +4,11 @@
 #include "Arduino_GFX.h"
 #include "UIString.h"
 #include "UITable.h"
+#include "UIBar.h"
 #include "data.h"
 
 struct DashUI {
+  UIBar *barTacho;
   UIString *digiTacho;
   UIString *digiSpeedo;
   UIString *digiGear;

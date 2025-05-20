@@ -43,7 +43,6 @@ void UIString::Update(const char *v) {
   sprintf(oldVal, "%s", this->value);
 
   // Figure out the x0 and y0 for the text
-  replaceString(oldVal, newVal); // <- It crashes here somewhere
-                                 //
+  replaceString(oldVal, newVal);
   strncpy(this->value, v, this->bufferSize);
 }

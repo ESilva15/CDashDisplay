@@ -47,6 +47,7 @@ Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
 // UIelements
 DashUI *ui = new DashUI();
+UIDecorations *rpmBarDecor = new UIDecorations();
 UIDecorations *rpmTextDecor = new UIDecorations();
 UIDecorations *speedTextDecor = new UIDecorations();
 UIDecorations *gearTextDecor = new UIDecorations();
@@ -59,6 +60,7 @@ UIDecorations *fuelConsumptionDecor = new UIDecorations();
 UIDecorations *brakeBiasDecor = new UIDecorations();
 UIDecorations *relativeDecor = new UIDecorations();
 
+UIBar rpmBar(gfx, UIDimensions(0, 0, 0, 0), rpmBarDecor, (char *)"Tach");
 UIString rpmText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"RPM");
 UIString speedText(gfx, UIDimensions(0, 0, 0, 0), speedTextDecor,
                    (char *)"Speed");
@@ -108,12 +110,27 @@ void setup() {
   relative->drawBox();
   ui->relative = relative;
 
+  // Setup the rpmBar box
+  rpmBarDecor->textSize = 3;
+  rpmBar.dims.height = 50;
+  rpmBar.dims.width = 350;
+  rpmBar.horizontalCenter();
+  rpmBar.range = 8;
+  rpmBar.refreshRate = 50;
+  ui->barTacho = &rpmBar;
+  ui->barTacho->Box();
+  ui->barTacho->Update((char*)"");
+
   // Setup the rpmText box
   rpmTextDecor->textSize = 7;
   rpmText.dims.height =
       calculateHeight(rpmTextDecor->titleSize, rpmTextDecor->textSize, 1);
   rpmText.dims.width = calculateWidth(rpmTextDecor->textSize, 5);
   rpmText.horizontalCenter();
+  rpmText.placeBelow(&rpmBar);
+  rpmText.dims.y += 40; // We gotta fix how the bar declares its height instead
+                        // of doing this here
+  rpmText.refreshRate = 100;
   ui->digiTacho = &rpmText;
   ui->digiTacho->drawBox();
   ui->digiTacho->Update("-----");
@@ -123,7 +140,10 @@ void setup() {
   speedText.dims.height =
       calculateHeight(speedTextDecor->titleSize, speedTextDecor->textSize, 1);
   speedText.dims.width = calculateWidth(speedTextDecor->textSize, 4);
+  speedText.placeBelow(&rpmBar);
   speedText.placeRight(&rpmText);
+  speedText.dims.y += 40; // We gotta fix how the bar declares its height
+                          // instead of doing this here
   ui->digiSpeedo = &speedText;
   ui->digiSpeedo->drawBox();
   ui->digiSpeedo->Update("---");
@@ -133,8 +153,8 @@ void setup() {
   gearText.dims.height =
       calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
   gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
-  gearText.horizontalCenter();
   gearText.dims.y = rpmText.dims.height + 5;
+  gearText.placeBelow(&rpmText);
   ui->digiGear = &gearText;
   ui->digiGear->drawBox();
   ui->digiGear->Update("-");
