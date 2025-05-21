@@ -5,7 +5,7 @@ UIBar::UIBar(Arduino_GFX *d, UIDimensions dims, UIDecorations *decor,
              char *title)
     : UIElement(d, dims, decor, title) {}
 
-void UIBar::Update(char* v) {
+void UIBar::Update(char *v) {
   unsigned long time = millis();
   if ((time - this->lastUpdate) <= this->refreshRate) {
     return;
@@ -92,11 +92,12 @@ void UIBar::Box() {
 
     this->display->setTextColor(RED);
     this->display->drawFastVLine(x, this->dims.y + this->dims.height, 7, RED);
-    this->display->setCursor(x, this->dims.y + this->dims.height + 7 + 2);
-    this->display->setTextColor(WHITE);
 
     char legend[5];
     sprintf(legend, "%d", k);
+    this->display->setCursor(x - (CHR_WIDTH(this->decor->textSize) / 2),
+                             this->dims.y + this->dims.height + 7 + 2);
+    this->display->setTextColor(WHITE);
     this->display->setTextSize(this->decor->textSize);
     this->display->print(legend);
   }

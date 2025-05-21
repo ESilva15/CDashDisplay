@@ -40,9 +40,11 @@ struct UIElement {
   uint16_t getTitleAreaWidth();
 
   // Positioning
-  void horizontalCenter();
+  void horizontalCenter(UIElement *reference);
+  void verticalCenter(UIElement *reference);
   void placeBelow(UIElement *reference);
   void placeRight(UIElement *reference);
+  void placeLeft(UIElement *reference);
 
   // Drawing
   void drawBox();

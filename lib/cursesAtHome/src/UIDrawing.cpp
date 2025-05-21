@@ -1,5 +1,6 @@
 #include "UIDrawing.h"
 #include "Arduino_GFX.h"
+#include "HardwareSerial.h"
 #include "UIComponent.h"
 #include <cstdint>
 
@@ -7,7 +8,7 @@
  * On the placement functions, change 5 to a variable or something
  */
 
-#define DEBUG
+// #define DEBUG
 
 uint16_t calculateHeight(int16_t titleSize, int16_t textSize, int16_t nLines) {
   return CHR_HEIGHT(titleSize) + CHR_HEIGHT(textSize) +
@@ -20,9 +21,17 @@ uint16_t calculateWidth(int16_t textSize, int16_t nChars) {
          (2 * (DEFAULT_MARGIN + DEFAULT_BORDER_THICKNESS));
 }
 
-void UIElement::horizontalCenter() {
-  uint16_t scrW = this->display->width();
-  this->dims.x = (scrW - this->dims.width) / 2;
+void UIElement::horizontalCenter(UIElement *ref) {
+  uint16_t middlePoint = 0;
+
+  if (ref != nullptr) {
+    Serial2.println("We are here indeed!");
+    middlePoint = ref->dims.x + (ref->dims.width / 2);
+  } else {
+    middlePoint = this->display->width() / 2;
+  }
+
+  this->dims.x = middlePoint - (this->dims.width / 2);
 }
 
 // We can add a mode of alignment here, center, left, right, whatever
@@ -34,6 +43,10 @@ void UIElement::placeBelow(UIElement *ref) {
 
 void UIElement::placeRight(UIElement *ref) {
   this->dims.x = ref->dims.x + ref->dims.width + 5;
+}
+
+void UIElement::placeLeft(UIElement *ref) {
+  this->dims.x = ref->dims.x - this->dims.width - 5;
 }
 
 void UIElement::drawBox() {

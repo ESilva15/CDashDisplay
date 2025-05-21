@@ -113,8 +113,9 @@ void setup() {
   // Setup the rpmBar box
   rpmBarDecor->textSize = 3;
   rpmBar.dims.height = 50;
-  rpmBar.dims.width = 350;
-  rpmBar.horizontalCenter();
+  rpmBar.dims.width = 450;
+  rpmBar.horizontalCenter(nullptr);
+  rpmBar.dims.x += 10;
   rpmBar.range = 8;
   rpmBar.refreshRate = 50;
   ui->barTacho = &rpmBar;
@@ -126,8 +127,8 @@ void setup() {
   rpmText.dims.height =
       calculateHeight(rpmTextDecor->titleSize, rpmTextDecor->textSize, 1);
   rpmText.dims.width = calculateWidth(rpmTextDecor->textSize, 5);
-  rpmText.horizontalCenter();
   rpmText.placeBelow(&rpmBar);
+  rpmText.horizontalCenter(&rpmBar);
   rpmText.dims.y += 40; // We gotta fix how the bar declares its height instead
                         // of doing this here
   rpmText.refreshRate = 100;
@@ -154,7 +155,7 @@ void setup() {
       calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
   gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
   gearText.dims.y = rpmText.dims.height + 5;
-  gearText.placeBelow(&rpmText);
+  gearText.placeLeft(&rpmText);
   ui->digiGear = &gearText;
   ui->digiGear->drawBox();
   ui->digiGear->Update("-");
@@ -164,7 +165,8 @@ void setup() {
   lapDelta.dims.height =
       calculateHeight(lapDeltaDecor->titleSize, lapDeltaDecor->textSize, 1);
   lapDelta.dims.width = calculateWidth(lapDeltaDecor->textSize, 6);
-  lapDelta.placeBelow(&gearText);
+  lapDelta.placeBelow(&rpmText);
+  lapDelta.horizontalCenter(&rpmText);
   ui->lapDelta = &lapDelta;
   ui->lapDelta->drawBox();
   ui->lapDelta->Update("--.-");
