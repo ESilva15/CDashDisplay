@@ -8,10 +8,16 @@ Currently I have a way to mount it on a G29 because its what I have.
 
 To drive it I one of my other projects: [ESDI](https://github.com/ESilva15/ESDI)
 
+## Many thanks
+- to [mgaman/ESP32-4827S043-LVGL](https://github.com/mgaman/ESP32-4827S043-LVGL): 
+don't remember exactly how but it helped me understand how to set up this ESP32
+for development.
+
+
 ![example of the display](./images/example_of_display.jpg)
 
 ## Assembly
-It requires a very simple modification to the G29. The display will seet between
+It requires a very simple modification to the G29. The display will seat between
 the base and the steering wheel and for the stock G29 paddles to remain functional,
 the steering wheel must be spaced.
 
@@ -27,6 +33,7 @@ go on the screws that screw the wheel to the base:
 
 ### Debugging wires
 RX 18 -> yellow -> green
+
 TX 19 -> blue -> white
 
 ### Cool fonts I like:
