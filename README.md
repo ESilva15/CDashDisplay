@@ -27,6 +27,7 @@ go on the screws that screw the wheel to the base:
 ![example of the display](./images/spacer_in_g29.jpg "spacer in the g29")
 
 # Roadmap
+- [ ] Simhub support
 - [ ] Better layout tooling
 - [ ] Dynamic layout/data
 
