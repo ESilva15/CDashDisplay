@@ -32,10 +32,20 @@ go on the screws that screw the wheel to the base:
 - [ ] Dynamic layout/data
 
 
-### Debugging wires
-RX 18 -> yellow -> green
+### Development
+#### Debugging wires
+| CYD            | Serial Cable |
+| -------------- | ------------ |
+| Yellow [RX 18] | Green        |
+| Blue [TX 19]   | White        |
 
-TX 19 -> blue -> white
+
+The `RX18` and `TX19` pins are the `IO18` and `IO19` pins on the board and 
+probably are labeled as `UART1` and `USB`.
+
+
+This is the `Serial2` we define on `main.cpp` currently.
+Then we listen to it with something like ``.
 
 ### Cool fonts I like:
 - u8g2_font_bubble_tr (really cool for splash screens)
