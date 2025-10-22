@@ -9,9 +9,9 @@ to have more ways to run analytics
 
 #include "Arduino_GFX.h"
 #include "HardwareSerial.h"
-// #include "UIDecorations.h"
+#include "UIDecorations.h"
 // #include "UIDrawing.h"
-// #include "UIString.h"
+#include "UIString.h"
 // #include "UITable.h"
 // #include "data.h"
 #include "displaySetup.h"
@@ -46,8 +46,8 @@ Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 // HardwareSerial debugSerial(1);
 
 // UIelements
-// UIDecorations *gearTextDecor = new UIDecorations();
-// UIString gearText(gfx, UIDimensions(0, 0, 0, 0), rpmTextDecor, (char *)"Gear");
+UIDecorations *gearTextDecor = new UIDecorations();
+UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char *)"Gear");
 
 void setup() {
   psramInit();
@@ -63,19 +63,57 @@ void setup() {
   initialDisplaySetup(gfx);
 
   // Setup the gear text box
-  // gearTextDecor->textSize = 7;
-  // gearText.dims.height =
-  //     calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
-  // gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
-  // gearText.dims.y = rpmText.dims.height + 5;
-  // gearText.placeLeft(&rpmText);
+  gearTextDecor->textSize = 7;
+  gearText.dims.height =
+      calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
+  gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
+  gearText.drawBox();
+  gearText.Update("Disconnected");
 
+  delay(500);
   Serial2.println("* Ready for loop");
 }
 
 uint64_t lastDataRead = 0;
+
+
+struct __attribute__((packed)) FlarePacket {
+  char deviceName[32];
+};
+
+bool gotAck = false;
+void sendHello() {
+  FlarePacket flare;
+  strcpy(flare.deviceName, "ESLabs CDashDisplay");
+
+  Serial.write((uint8_t*)&flare, sizeof(flare));
+}
+
+#define CMD_HELLO    1
+#define CMD_IDENTIFY 2
+#define CMD_ACK      3
+
+uint64_t lastSent = 0;
 void loop(void) {
-  Serial2.println("gre we here?");
+  uint64_t cur = millis();
+  if (!gotAck && (cur - lastSent) >= 1000) {
+    // Send the packet again
+    sendHello();
+    lastSent = cur;
+  }
+
+  if (Serial.available() >= 1) {
+    uint8_t cmd = Serial.read();
+    if (cmd == CMD_IDENTIFY) {
+      Serial2.println("Got identification request!");
+      sendHello();
+    } else if (cmd == CMD_ACK) {
+      Serial2.println("Got ack!");
+      gotAck = true;;
+    }
+  }
+
+
   // // Request data here
   // SendDataRequest();
   //
