@@ -25,6 +25,9 @@ to have more ways to run analytics
 // #include <nvs.h>
 // #include <nvs_flash.h>
 
+#define ESLABS_DEVICE_ID 0x01
+#define ESLABS_DEVICE_NAME "ESLabs CDashDisplay"
+
 #define UART1_TX 19
 #define UART1_RX 18
 
@@ -80,8 +83,9 @@ typedef uint8_t PacketType;
 const uint8_t IdentificationPacket = 0;
 
 // eventually try this out with __attrubute__((packed))
-struct FlarePacket {
+struct __attribute__((packed)) FlarePacket {
   char StartMarker;
+  uint8_t DeviceID;
   PacketType PktType;
   char deviceName[32];
   char EndMarker;
@@ -97,9 +101,9 @@ void sendHello() {
   FlarePacket flare;
   initFlarePacket(&flare);
 
-  const char devName[] = "ESLabs CDashDisplay";
+  flare.DeviceID = ESLABS_DEVICE_ID;
   flare.PktType = IdentificationPacket;
-  strncpy(flare.deviceName, devName, strlen(devName));
+  strncpy(flare.deviceName, ESLABS_DEVICE_NAME, strlen(ESLABS_DEVICE_NAME));
 
   Serial.write((uint8_t*)&flare, sizeof(flare));
   Serial.flush();
