@@ -76,39 +76,58 @@ void setup() {
 
 uint64_t lastDataRead = 0;
 
+typedef uint8_t PacketType;
+const uint8_t IdentificationPacket = 0;
 
-struct __attribute__((packed)) FlarePacket {
+// eventually try this out with __attrubute__((packed))
+struct FlarePacket {
+  char StartMarker;
+  PacketType PktType;
   char deviceName[32];
+  char EndMarker;
 };
+
+void initFlarePacket(FlarePacket* packet) {
+  packet->StartMarker = 0x02; // Start of text
+  packet->EndMarker = 0x03; // End of text
+}
 
 bool gotAck = false;
 void sendHello() {
   FlarePacket flare;
-  strcpy(flare.deviceName, "ESLabs CDashDisplay");
+  initFlarePacket(&flare);
+
+  const char devName[] = "ESLabs CDashDisplay";
+  flare.PktType = IdentificationPacket;
+  strncpy(flare.deviceName, devName, strlen(devName));
 
   Serial.write((uint8_t*)&flare, sizeof(flare));
+  Serial.flush();
 }
 
-#define CMD_HELLO    1
-#define CMD_IDENTIFY 2
-#define CMD_ACK      3
+
+typedef uint8_t Command;
+const Command CmdRequestID = 0;
+const Command CmdAckID = 1;
 
 uint64_t lastSent = 0;
 void loop(void) {
   uint64_t cur = millis();
-  if (!gotAck && (cur - lastSent) >= 1000) {
-    // Send the packet again
-    sendHello();
-    lastSent = cur;
-  }
+  // if (!gotAck && (cur - lastSent) >= 1000) {
+  //   // Send the packet again
+  //   sendHello();
+  //   lastSent = cur;
+  // }
 
   if (Serial.available() >= 1) {
     uint8_t cmd = Serial.read();
-    if (cmd == CMD_IDENTIFY) {
+    if (cmd == CmdRequestID) {
       Serial2.println("Got identification request!");
+      gearText.Update("Connecting");
       sendHello();
-    } else if (cmd == CMD_ACK) {
+    } else if (cmd == CmdAckID) {
       Serial2.println("Got ack!");
+      gearText.Update("Connected");
       gotAck = true;;
     }
   }
