@@ -7,6 +7,9 @@ TODO:
 to have more ways to run analytics
 */
 
+#include "communication/commands.h"
+#include "communication/packets.h"
+#include "communication/identificationPacket.h"
 #include "Arduino_GFX.h"
 #include "HardwareSerial.h"
 #include "UIDecorations.h"
@@ -79,40 +82,7 @@ void setup() {
 
 uint64_t lastDataRead = 0;
 
-typedef uint8_t PacketType;
-const uint8_t IdentificationPacket = 0;
-
-// eventually try this out with __attrubute__((packed))
-struct __attribute__((packed)) FlarePacket {
-  char StartMarker;
-  uint8_t DeviceID;
-  PacketType PktType;
-  char deviceName[32];
-  char EndMarker;
-};
-
-void initFlarePacket(FlarePacket* packet) {
-  packet->StartMarker = 0x02; // Start of text
-  packet->EndMarker = 0x03; // End of text
-}
-
 bool gotAck = false;
-void sendHello() {
-  FlarePacket flare;
-  initFlarePacket(&flare);
-
-  flare.DeviceID = ESLABS_DEVICE_ID;
-  flare.PktType = IdentificationPacket;
-  strncpy(flare.deviceName, ESLABS_DEVICE_NAME, strlen(ESLABS_DEVICE_NAME));
-
-  Serial.write((uint8_t*)&flare, sizeof(flare));
-  Serial.flush();
-}
-
-
-typedef uint8_t Command;
-const Command CmdRequestID = 0;
-const Command CmdAckID = 1;
 
 uint64_t lastSent = 0;
 void loop(void) {
@@ -128,7 +98,10 @@ void loop(void) {
     if (cmd == CmdRequestID) {
       Serial2.println("Got identification request!");
       gearText.Update("Connecting");
-      sendHello();
+
+      IdentificationPacket papers;
+      initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID);
+      sendIdentificationPacket(&papers);
     } else if (cmd == CmdAckID) {
       Serial2.println("Got ack!");
       gearText.Update("Connected");
