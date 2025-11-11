@@ -20,3 +20,5 @@ uploadfs:
 update:
 	pio -f -c vim update
 
+cleanESlabs:
+	rm -rf .pio/libdeps/esp32-s3-devkitc-1/eslabsCurses

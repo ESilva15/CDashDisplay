@@ -7,6 +7,10 @@ TODO:
 to have more ways to run analytics
 */
 
+#include "UIComponent.h"
+#include "UIScreen.h"
+#include "UIDecorations.h"
+#include "UIDimensions.h"
 #include "communication/commands.h"
 #include "communication/packets.h"
 #include "communication/identificationPacket.h"
@@ -50,10 +54,22 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
 // HardwareSerial debugSerial(1);
+Curses::Screen mainSreen(
+    gfx, 
+    UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
+    UIDecorations()
+);
 
 // UIelements
 UIDecorations *gearTextDecor = new UIDecorations();
 UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char *)"Gear");
+
+UIElement mainWindow(
+    gfx, 
+    UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
+    gearTextDecor, 
+    (char*)"MAIN WINDOW"
+);
 
 void setup() {
   psramInit();
@@ -69,12 +85,33 @@ void setup() {
   initialDisplaySetup(gfx);
 
   // Setup the gear text box
-  gearTextDecor->textSize = 7;
-  gearText.dims.height =
-      calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
-  gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
-  gearText.drawBox();
-  gearText.Update("Disconnected");
+  // gearTextDecor->textSize = 7;
+  // gearText.dims.height =
+  //     calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
+  // gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
+  // gearText.drawBox();
+  // gearText.Update("Disconnected");
+  mainWindow.drawBox();
+
+  int16_t childID = mainWindow.AddChild();
+  if (!childID) {
+    Serial2.println("Failed to add new window!");
+  } else {
+    Serial2.print("Successfully added a new window: ");
+    Serial2.println(childID);
+
+    UIElement* childComponent = mainWindow.GetChild(childID);
+
+    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Child Window", childID);
+    childComponent->decor = gearTextDecor;
+    childComponent->display = mainSreen.display;
+    childComponent->dims.x = 30;
+    childComponent->dims.y = 30;
+    childComponent->dims.width = 300;
+    childComponent->dims.height = 300;
+
+    childComponent->drawBox();
+  }
 
   delay(500);
   Serial2.println("* Ready for loop");
@@ -97,14 +134,14 @@ void loop(void) {
     uint8_t cmd = Serial.read();
     if (cmd == CmdRequestID) {
       Serial2.println("Got identification request!");
-      gearText.Update("Connecting");
+      // gearText.Update("Connecting");
 
       IdentificationPacket papers;
       initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID);
       sendIdentificationPacket(&papers);
     } else if (cmd == CmdAckID) {
       Serial2.println("Got ack!");
-      gearText.Update("Connected");
+      // gearText.Update("Connected");
       gotAck = true;;
     }
   }
