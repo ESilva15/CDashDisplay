@@ -15,7 +15,7 @@ struct __attribute__((packed)) IdentificationPacket {
 };
 
 void initIdentificationPacket(IdentificationPacket* packet, const char* name, 
-    uint8_t id);
+                              uint8_t id);
 void sendIdentificationPacket(IdentificationPacket* packet);
 
 #endif

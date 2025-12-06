@@ -8,6 +8,8 @@ to have more ways to run analytics
 */
 
 #include "UIComponent.h"
+#include "values.h"
+#include "windowPool.h"
 #include "UIScreen.h"
 #include "UIDecorations.h"
 #include "UIDimensions.h"
@@ -54,22 +56,22 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
 // HardwareSerial debugSerial(1);
-Curses::Screen mainSreen(
+Curses::Screen mainScreen(
     gfx, 
     UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
     UIDecorations()
 );
 
 // UIelements
-UIDecorations *gearTextDecor = new UIDecorations();
-UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char *)"Gear");
-
-UIElement mainWindow(
-    gfx, 
-    UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
-    gearTextDecor, 
-    (char*)"MAIN WINDOW"
-);
+// UIDecorations *gearTextDecor = new UIDecorations();
+// UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char *)"Gear");
+//
+// UIElement mainWindow(
+//     gfx, 
+//     UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
+//     gearTextDecor, 
+//     (char*)"MAIN WINDOW"
+// );
 
 void setup() {
   psramInit();
@@ -84,34 +86,67 @@ void setup() {
   Serial2.print(F("* Initiating display\r\n"));
   initialDisplaySetup(gfx);
 
-  // Setup the gear text box
-  // gearTextDecor->textSize = 7;
-  // gearText.dims.height =
-  //     calculateHeight(gearTextDecor->titleSize, gearTextDecor->textSize, 1);
-  // gearText.dims.width = calculateWidth(gearTextDecor->textSize, 2);
-  // gearText.drawBox();
-  // gearText.Update("Disconnected");
-  mainWindow.drawBox();
+  // Only setup the main screen after initializing the Serial2
+  mainScreen.Setup("Main Window");
 
-  int16_t childID = mainWindow.AddChild();
-  if (!childID) {
+  // Grab a handle for the main window of the screen
+  UIElement* mainWindow = mainScreen.mainWindowHandle;
+  mainWindow->drawBox();
+
+  int16_t childID = mainWindow->AddChild(STRING);
+  if (childID < 0) {
     Serial2.println("Failed to add new window!");
   } else {
     Serial2.print("Successfully added a new window: ");
     Serial2.println(childID);
 
-    UIElement* childComponent = mainWindow.GetChild(childID);
+    UIElement* childComponent = mainWindow->GetChild(childID);
 
     childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Child Window", childID);
-    childComponent->decor = gearTextDecor;
-    childComponent->display = mainSreen.display;
-    childComponent->dims.x = 30;
-    childComponent->dims.y = 30;
-    childComponent->dims.width = 300;
-    childComponent->dims.height = 300;
+    childComponent->SetUIDecorations(UIDecorations());
+    childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
+    childComponent->SetDisplay(mainScreen.display);
 
     childComponent->drawBox();
   }
+
+  childID = mainWindow->AddChild(STRING);
+  if (childID < 0) {
+    Serial2.println("Failed to add new window!");
+  } else {
+    Serial2.print("Successfully added a new window: ");
+    Serial2.println(childID);
+
+    UIElement* childComponent = mainWindow->GetChild(childID);
+
+    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Second Child", childID);
+    childComponent->SetUIDecorations(UIDecorations());
+    childComponent->SetUIDimensions(UIDimensions(330, 20, 300, 300));
+    childComponent->SetDisplay(mainScreen.display);
+
+    childComponent->drawBox();
+  }
+
+  mainWindow->RemoveChild(1);
+
+  childID = mainWindow->AddChild(STRING);
+  if (childID < 0) {
+    Serial2.println("Failed to add new window!");
+  } else {
+    Serial2.print("Successfully added a new window: ");
+    Serial2.println(childID);
+
+    UIElement* childComponent = mainWindow->GetChild(childID);
+
+    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Third Child", childID);
+    childComponent->SetUIDecorations(UIDecorations());
+    childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
+    childComponent->SetDisplay(mainScreen.display);
+
+    childComponent->drawBox();
+  }
+
+  WindowPool::PrintInUse();
 
   delay(500);
   Serial2.println("* Ready for loop");
@@ -132,17 +167,26 @@ void loop(void) {
 
   if (Serial.available() >= 1) {
     uint8_t cmd = Serial.read();
-    if (cmd == CmdRequestID) {
-      Serial2.println("Got identification request!");
-      // gearText.Update("Connecting");
+    switch (cmd) {
+      case CmdRequestID:
+        Serial2.println("Got identification request!");
+        // gearText.Update("Connecting");
 
-      IdentificationPacket papers;
-      initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID);
-      sendIdentificationPacket(&papers);
-    } else if (cmd == CmdAckID) {
-      Serial2.println("Got ack!");
-      // gearText.Update("Connected");
-      gotAck = true;;
+        IdentificationPacket papers;
+        initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID);
+        sendIdentificationPacket(&papers);
+        break;
+      case CmdAckID:
+        Serial2.println("Got ack!");
+        // gearText.Update("Connected");
+        gotAck = true;;
+        break;
+      case NewWindow:
+        Serial2.println("Received request to create window");
+        break;
+      case DestroyWindow:
+        Serial2.println("Received request to destroy window");
+        break;
     }
   }
 
