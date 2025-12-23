@@ -4,11 +4,13 @@
 #include <stdint.h>
 
 typedef enum : uint8_t {
-    CmdRequestID = 0,
-    CmdAckID,
-    CmdCreateScreen,
-    CmdCreateWindow
+    CmdUnknown = 0,
+    CmdRequestID = 1,
+    CmdAckID = 2,
+    CmdCreateWindow = 3,
+    CmdDestroyWindow = 4
 } Command;
 
+char* CommandToStr(Command id);
 
 #endif

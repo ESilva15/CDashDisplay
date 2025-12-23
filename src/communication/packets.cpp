@@ -1,4 +1,4 @@
-#include "identificationPacket.h"
+#include "packets.h"
 #include <Arduino.h>
 #include <cstdint>
 #include <cstring>
@@ -15,9 +15,4 @@ void initIdentificationPacket(IdentificationPacket* packet, const char* name,
   // snprintf(packet->deviceName, sizeof(packet->deviceName), "%s", name);
   strncpy(packet->deviceName, name, strlen(name));
   packet->deviceName[strlen(name)] = '\0';
-}
-
-void sendIdentificationPacket(IdentificationPacket* packet) {
-  Serial.write((uint8_t*)packet, sizeof(*packet));
-  Serial.flush();
 }

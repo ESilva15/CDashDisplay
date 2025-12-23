@@ -7,18 +7,17 @@ TODO:
 to have more ways to run analytics
 */
 
-#include "UIComponent.h"
-#include "values.h"
-#include "windowPool.h"
-#include "UIScreen.h"
-#include "UIDecorations.h"
-#include "UIDimensions.h"
-#include "communication/commands.h"
-#include "communication/packets.h"
-#include "communication/identificationPacket.h"
 #include "Arduino_GFX.h"
 #include "HardwareSerial.h"
+#include "UIComponent.h"
 #include "UIDecorations.h"
+#include "UIDimensions.h"
+#include "UIScreen.h"
+#include "communication/commands.h"
+#include "communication/packets.h"
+#include "communication/walkieTalkie.h"
+#include "values.h"
+#include "windowPool.h"
 // #include "UIDrawing.h"
 #include "UIString.h"
 // #include "UITable.h"
@@ -56,20 +55,18 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
 // HardwareSerial debugSerial(1);
-Curses::Screen mainScreen(
-    gfx, 
-    UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
-    UIDecorations()
-);
+Curses::Screen mainScreen(gfx, UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
+                          UIDecorations());
 
 // UIelements
 // UIDecorations *gearTextDecor = new UIDecorations();
-// UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char *)"Gear");
+// UIString gearText(gfx, UIDimensions(0, 0, 0, 0), gearTextDecor, (char
+// *)"Gear");
 //
 // UIElement mainWindow(
-//     gfx, 
+//     gfx,
 //     UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
-//     gearTextDecor, 
+//     gearTextDecor,
 //     (char*)"MAIN WINDOW"
 // );
 
@@ -90,61 +87,64 @@ void setup() {
   mainScreen.Setup("Main Window");
 
   // Grab a handle for the main window of the screen
-  UIElement* mainWindow = mainScreen.mainWindowHandle;
+  UIElement *mainWindow = mainScreen.mainWindowHandle;
   mainWindow->drawBox();
 
-  int16_t childID = mainWindow->AddChild(STRING);
-  if (childID < 0) {
-    Serial2.println("Failed to add new window!");
-  } else {
-    Serial2.print("Successfully added a new window: ");
-    Serial2.println(childID);
-
-    UIElement* childComponent = mainWindow->GetChild(childID);
-
-    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Child Window", childID);
-    childComponent->SetUIDecorations(UIDecorations());
-    childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
-    childComponent->SetDisplay(mainScreen.display);
-
-    childComponent->drawBox();
-  }
-
-  childID = mainWindow->AddChild(STRING);
-  if (childID < 0) {
-    Serial2.println("Failed to add new window!");
-  } else {
-    Serial2.print("Successfully added a new window: ");
-    Serial2.println(childID);
-
-    UIElement* childComponent = mainWindow->GetChild(childID);
-
-    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Second Child", childID);
-    childComponent->SetUIDecorations(UIDecorations());
-    childComponent->SetUIDimensions(UIDimensions(330, 20, 300, 300));
-    childComponent->SetDisplay(mainScreen.display);
-
-    childComponent->drawBox();
-  }
-
-  mainWindow->RemoveChild(1);
-
-  childID = mainWindow->AddChild(STRING);
-  if (childID < 0) {
-    Serial2.println("Failed to add new window!");
-  } else {
-    Serial2.print("Successfully added a new window: ");
-    Serial2.println(childID);
-
-    UIElement* childComponent = mainWindow->GetChild(childID);
-
-    childComponent->SetTitle((char*)"%s [%2d]", (const char*)"Third Child", childID);
-    childComponent->SetUIDecorations(UIDecorations());
-    childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
-    childComponent->SetDisplay(mainScreen.display);
-
-    childComponent->drawBox();
-  }
+  // int16_t childID = mainWindow->AddChild(STRING);
+  // if (childID < 0) {
+  //   Serial2.println("Failed to add new window!");
+  // } else {
+  //   Serial2.print("Successfully added a new window: ");
+  //   Serial2.println(childID);
+  //
+  //   UIElement *childComponent = mainWindow->GetChild(childID);
+  //
+  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Child Window",
+  //                            childID);
+  //   childComponent->SetUIDecorations(UIDecorations());
+  //   childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
+  //   childComponent->SetDisplay(mainScreen.display);
+  //
+  //   childComponent->drawBox();
+  // }
+  //
+  // childID = mainWindow->AddChild(STRING);
+  // if (childID < 0) {
+  //   Serial2.println("Failed to add new window!");
+  // } else {
+  //   Serial2.print("Successfully added a new window: ");
+  //   Serial2.println(childID);
+  //
+  //   UIElement *childComponent = mainWindow->GetChild(childID);
+  //
+  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Second Child",
+  //                            childID);
+  //   childComponent->SetUIDecorations(UIDecorations());
+  //   childComponent->SetUIDimensions(UIDimensions(330, 20, 300, 300));
+  //   childComponent->SetDisplay(mainScreen.display);
+  //
+  //   childComponent->drawBox();
+  // }
+  //
+  // mainWindow->RemoveChild(1);
+  //
+  // childID = mainWindow->AddChild(STRING);
+  // if (childID < 0) {
+  //   Serial2.println("Failed to add new window!");
+  // } else {
+  //   Serial2.print("Successfully added a new window: ");
+  //   Serial2.println(childID);
+  //
+  //   UIElement *childComponent = mainWindow->GetChild(childID);
+  //
+  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Third Child",
+  //                            childID);
+  //   childComponent->SetUIDecorations(UIDecorations());
+  //   childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
+  //   childComponent->SetDisplay(mainScreen.display);
+  //
+  //   childComponent->drawBox();
+  // }
 
   WindowPool::PrintInUse();
 
@@ -156,56 +156,114 @@ uint64_t lastDataRead = 0;
 
 bool gotAck = false;
 
+struct header {
+  uint8_t StartMarker;
+  Command Cmd;
+  uint8_t EndMarker;
+};
+
+void PrintHeader(header *h) {
+  Serial2.println("HEADER:");
+  Serial2.print("  StartMarker: ");
+  Serial2.println(h->StartMarker);
+  Serial2.print("  Command    : ");
+  Serial2.println(CommandToStr(h->Cmd));
+  Serial2.print("  EndMarker  : ");
+  Serial2.println(h->EndMarker);
+  Serial2.println();
+}
+
+struct UIWindowPacket {
+  uint8_t StartMarker;
+  uint16_t x0;
+  uint16_t y0;
+  uint16_t width;
+  uint16_t height;
+  uint8_t EndMarker;
+};
+
 uint64_t lastSent = 0;
 void loop(void) {
   uint64_t cur = millis();
-  // if (!gotAck && (cur - lastSent) >= 1000) {
-  //   // Send the packet again
-  //   sendHello();
-  //   lastSent = cur;
-  // }
 
-  if (Serial.available() >= 1) {
-    uint8_t cmd = Serial.read();
-    switch (cmd) {
+  // with this new way of reading data, we are just gonna read a payload
+  // and get a command
+  Command cmd = CmdUnknown;
+  uint8_t payload[256] = {0};
+
+  if (Serial.available() > 0) {
+    size_t resp = WalkieTalkie::RecvData(&cmd, payload, 256);
+    if (resp < 0) {
+      Serial2.println(F("Failed to receive data from serial"));
+      return;
+    } else if (resp == 0) {
+      Serial2.println(F("No data to receive"));
+      return;
+    }
+
+    Serial2.print("Command: ");
+    Serial2.println(CommandToStr(cmd));
+    Serial2.print("Response: ");
+    Serial2.println(resp);
+
+    switch(cmd) {
       case CmdRequestID:
-        Serial2.println("Got identification request!");
-        // gearText.Update("Connecting");
-
         IdentificationPacket papers;
-        initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID);
-        sendIdentificationPacket(&papers);
+        initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID); 
+        WalkieTalkie::SendData(&papers);
         break;
-      case CmdAckID:
-        Serial2.println("Got ack!");
-        // gearText.Update("Connected");
-        gotAck = true;;
-        break;
-      case NewWindow:
-        Serial2.println("Received request to create window");
-        break;
-      case DestroyWindow:
-        Serial2.println("Received request to destroy window");
-        break;
+      default:
+        Serial2.print(F("Command `"));
+        Serial2.print(CommandToStr(cmd));
+        Serial2.print(F("` has not been implemented yet."));
     }
   }
 
-
-  // // Request data here
-  // SendDataRequest();
+  // // Try to use a state machine for this instead? Would it be better or just more
+  // // verbose and difficult to read?
+  // if (Serial.available() >= 1) {
+  //   // Receive the header
+  //   header h = {0};
+  //   int res = WalkieTalkie::RecvData(&h);
+  //   if (res > 0) {
+  //     PrintHeader(&h);
+  //   } else {
+  //     Serial2.println(F("Failed to read header"));
+  //     return;
+  //   }
   //
-  // // Receive data
-  // DataPacket telemetryPacket;
-  // int res = RecvDataPacket(&telemetryPacket);
+  //   // Now we receive the body
+  //   switch(h.Cmd) {
+  //     case CmdRequestID:
+  //       // We have no body to receive, we just return data
+  //       break;
+  //     case CmdCreateWindow:
+  //       Serial2.println("Awaiting body...");
+  //       // We have to receive a body, should have plenty of data
+  //       //
+  //       UIWindowPacket windowData;
+  //       size_t bytes = WalkieTalkie::RecvData(&windowData);
+  //       if (bytes <= 0) {
+  //         Serial2.println("Malformed data");
+  //       }
   //
-  // if (res == 0) {
-  //   ui->Update(&telemetryPacket);
+  //       Serial2.print("StartMarker: ");
+  //       Serial2.println(windowData.StartMarker);
+  //       Serial2.print("x0: ");
+  //       Serial2.println(windowData.x0);
+  //       Serial2.print("y0: ");
+  //       Serial2.println(windowData.y0);
+  //       Serial2.print("width: ");
+  //       Serial2.println(windowData.width);
+  //       Serial2.print("height: ");
+  //       Serial2.println(windowData.height);
+  //       // Serial2.print("title: ");
+  //       // Serial2.println(windowData.title);
+  //       Serial2.print("EndMarker: ");
+  //       Serial2.println(windowData.EndMarker);
   //
-  //   lastDataRead = millis();
-  // }
-  //
-  // // If no data is received for 5 seconds, reset the display
-  // if (millis() - lastDataRead >= 5000) {
-  //   Serial2.print("Resetting the display");
+  //       Serial2.println("Received body... Continuing");
+  //       break;
+  //   }
   // }
 }
