@@ -192,7 +192,7 @@ void loop(void) {
   uint8_t payload[256] = {0};
 
   if (Serial.available() > 0) {
-    size_t resp = WalkieTalkie::RecvData(&cmd, payload, 256);
+    int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, 256);
     if (resp < 0) {
       Serial2.println(F("Failed to receive data from serial"));
       return;

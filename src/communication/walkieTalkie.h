@@ -1,7 +1,6 @@
 #ifndef __WALKIE_TALKIE__
 #define __WALKIE_TALKIE__
 
-#include "communication/communication.h"
 #include "communication/commands.h"
 #include <cstdint>
 #include <Arduino.h>
@@ -20,6 +19,8 @@ namespace WalkieTalkie {
   inline uint8_t buffer[4096];
   inline int16_t bufferIndex = 0;
   inline RecvState state = WaitingSTX;
+  inline int16_t len = 0;
+  inline uint8_t crc = 0;
 
   inline static void resetBuffer() {
     bufferIndex = 0;
@@ -37,7 +38,7 @@ namespace WalkieTalkie {
     Serial.flush();
   }
 
-  size_t RecvData(Command *command, uint8_t *payload, uint16_t payloadMax);
+  int16_t RecvStream(Command *command, uint8_t *payload, uint16_t payloadMax);
 };
 
 #endif
