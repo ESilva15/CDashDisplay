@@ -1,5 +1,6 @@
 #include "walkieTalkie.h"
 #include "HardwareSerial.h"
+#include "logger/logger.h"
 #include "communication/commands.h"
 #include "communication/communication.h"
 #include <cstdint>
@@ -8,22 +9,18 @@
 
 namespace WalkieTalkie {
   static inline void WaitingSTXRoutine(byte *b) {
+    LOG_TRACE(F("First byte is: %d\n"), *b);
     if (*b == STX) {
-      Serial2.println(F("First byte is STX"));
       state = RecvCMD;
       resetBuffer();
-    } else {
-      Serial2.print(F("First byte is not STX: "));
-      Serial2.println(*b);
-    }
+    }  
   }
 
   static inline void RecvCMDRoutine(Command *command, byte *b) {
-    Serial2.println(F("Reading the command byte"));
+    LOG_TRACE(F("Reading the command byte\n"));
 
     *command = Command(*b);
-    Serial2.print("  Command: ");
-    Serial2.println(*b);
+    LOG_TRACE(F("  Command: %d\n"), *b);
 
     state = RecvLen;
 
@@ -31,23 +28,20 @@ namespace WalkieTalkie {
   }
 
   static inline void RecvLenRoutine(byte *b) {
-    Serial2.println(F("Reading the len"));
+    LOG_TRACE(F("Reading the len\n"));
     buffer[bufferIndex++] = *b;
     // we are currently using a int16_t for the len so: 2 bytes
     if (bufferIndex > 1) {
       len = buffer[0] | (buffer[1] << 8);
-      Serial2.print("Len: ");
-      Serial2.println(len);
+      LOG_TRACE(F("Len: %d\n"), len);
       state = RecvPayload;
       resetBuffer();
     }
   }
 
   static inline void RecvPayloadRoutine(uint8_t *payload, byte *b) {
-    Serial2.print("Reading payload: ");
-    Serial2.print(bufferIndex);
-    Serial2.print(" - ");
-    Serial2.println(*b);
+    LOG_TRACE(F("Reading payload: %d %s %d\n"), bufferIndex, " - ", *b);
+
     buffer[bufferIndex++] = *b;
     if (bufferIndex == len) {
       // put the buffer data somewhere
@@ -59,8 +53,7 @@ namespace WalkieTalkie {
 
   static inline int RecvCRCRoutine(byte *b) {
     crc = *b;
-    Serial2.print("Reading CRC:");
-    Serial2.println(crc);
+    LOG_TRACE(F("Reacing CRC: %d\n"), crc);
 
     state = RecvETX;
     resetBuffer();
@@ -69,19 +62,15 @@ namespace WalkieTalkie {
   }
 
   static inline size_t RecvETXRoutine(uint8_t *payload, byte *b) {
+    LOG_TRACE(F("READING ETX\n"));
     state = WaitingSTX;
 
-    Serial2.println("Reading ETX");
+    uint8_t computedCRC = CRC8(payload, len);
     if (*b != ETX) {
-      Serial2.print("Failure, last byte was: ");
-      Serial2.println(*b);
+      LOG_TRACE(F("Failure, last byte was: %d\n"), *b);
       return -1;
-    } else if (crc != CRC8(payload, len)) {
-      Serial2.print("CRC don't match. Expected: ");
-      Serial2.print(crc);
-      Serial2.print(", Got: ");
-      Serial2.println(CRC8(payload, len));
-
+    } else if (crc != computedCRC) {
+      LOG_TRACE(F("CRC don't match. Expected: %d, got: %d\n"), crc, computedCRC);
       return -2;
     } else {
       return len;

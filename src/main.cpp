@@ -16,6 +16,7 @@ to have more ways to run analytics
 #include "communication/commands.h"
 #include "communication/packets.h"
 #include "communication/walkieTalkie.h"
+#include "logger/logger.h"
 #include "values.h"
 #include "windowPool.h"
 // #include "UIDrawing.h"
@@ -75,12 +76,11 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize the debug serial object
-  Serial2.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
-  Serial2.flush();
+  Logger::Initialize(UART1_RX, UART1_TX);
 
-  Serial2.print(F("\r=== ESP32 SimRacing DashDisplay ===\r\n"));
+  LOG_INFO(F("=== ESP32 SimRacing DashDisplay ===\r\n"));
+  LOG_INFO(F("* Initiating display\r\n"));
 
-  Serial2.print(F("* Initiating display\r\n"));
   initialDisplaySetup(gfx);
 
   // Only setup the main screen after initializing the Serial2
@@ -149,29 +149,29 @@ void setup() {
   WindowPool::PrintInUse();
 
   delay(500);
-  Serial2.println("* Ready for loop");
+  LOG_INFO(F("* Ready for loop"));
 }
 
 uint64_t lastDataRead = 0;
 
 bool gotAck = false;
 
-struct header {
-  uint8_t StartMarker;
-  Command Cmd;
-  uint8_t EndMarker;
-};
+// struct header {
+//   uint8_t StartMarker;
+//   Command Cmd;
+//   uint8_t EndMarker;
+// };
 
-void PrintHeader(header *h) {
-  Serial2.println("HEADER:");
-  Serial2.print("  StartMarker: ");
-  Serial2.println(h->StartMarker);
-  Serial2.print("  Command    : ");
-  Serial2.println(CommandToStr(h->Cmd));
-  Serial2.print("  EndMarker  : ");
-  Serial2.println(h->EndMarker);
-  Serial2.println();
-}
+// void PrintHeader(header *h) {
+//   Serial2.println("HEADER:");
+//   Serial2.print("  StartMarker: ");
+//   Serial2.println(h->StartMarker);
+//   Serial2.print("  Command    : ");
+//   Serial2.println(CommandToStr(h->Cmd));
+//   Serial2.print("  EndMarker  : ");
+//   Serial2.println(h->EndMarker);
+//   Serial2.println();
+// }
 
 struct UIWindowPacket {
   uint8_t StartMarker;
@@ -194,17 +194,15 @@ void loop(void) {
   if (Serial.available() > 0) {
     int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, 256);
     if (resp < 0) {
-      Serial2.println(F("Failed to receive data from serial"));
+      LOG_WARN(F("Failed to receive data from serial"));
       return;
     } else if (resp == 0) {
-      Serial2.println(F("No data to receive"));
+      LOG_INFO(F("No data to receive"));
       return;
     }
 
-    Serial2.print("Command: ");
-    Serial2.println(CommandToStr(cmd));
-    Serial2.print("Response: ");
-    Serial2.println(resp);
+    LOG_INFO(F("Command: %s\n"), CommandToStr(cmd));
+    LOG_INFO(F("Response Payload Len: %d\n"), resp);
 
     switch(cmd) {
       case CmdRequestID:
@@ -213,57 +211,7 @@ void loop(void) {
         WalkieTalkie::SendData(&papers);
         break;
       default:
-        Serial2.print(F("Command `"));
-        Serial2.print(CommandToStr(cmd));
-        Serial2.print(F("` has not been implemented yet."));
+        LOG_WARN(F("Command: `%s` has not been implemented yet."), CommandToStr(cmd));
     }
   }
-
-  // // Try to use a state machine for this instead? Would it be better or just more
-  // // verbose and difficult to read?
-  // if (Serial.available() >= 1) {
-  //   // Receive the header
-  //   header h = {0};
-  //   int res = WalkieTalkie::RecvData(&h);
-  //   if (res > 0) {
-  //     PrintHeader(&h);
-  //   } else {
-  //     Serial2.println(F("Failed to read header"));
-  //     return;
-  //   }
-  //
-  //   // Now we receive the body
-  //   switch(h.Cmd) {
-  //     case CmdRequestID:
-  //       // We have no body to receive, we just return data
-  //       break;
-  //     case CmdCreateWindow:
-  //       Serial2.println("Awaiting body...");
-  //       // We have to receive a body, should have plenty of data
-  //       //
-  //       UIWindowPacket windowData;
-  //       size_t bytes = WalkieTalkie::RecvData(&windowData);
-  //       if (bytes <= 0) {
-  //         Serial2.println("Malformed data");
-  //       }
-  //
-  //       Serial2.print("StartMarker: ");
-  //       Serial2.println(windowData.StartMarker);
-  //       Serial2.print("x0: ");
-  //       Serial2.println(windowData.x0);
-  //       Serial2.print("y0: ");
-  //       Serial2.println(windowData.y0);
-  //       Serial2.print("width: ");
-  //       Serial2.println(windowData.width);
-  //       Serial2.print("height: ");
-  //       Serial2.println(windowData.height);
-  //       // Serial2.print("title: ");
-  //       // Serial2.println(windowData.title);
-  //       Serial2.print("EndMarker: ");
-  //       Serial2.println(windowData.EndMarker);
-  //
-  //       Serial2.println("Received body... Continuing");
-  //       break;
-  //   }
-  // }
 }
