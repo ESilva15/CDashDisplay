@@ -16,7 +16,7 @@ to have more ways to run analytics
 #include "communication/commands.h"
 #include "communication/packets.h"
 #include "communication/walkieTalkie.h"
-#include "logger/logger.h"
+#include "logger.h"
 #include "values.h"
 #include "windowPool.h"
 // #include "UIDrawing.h"
@@ -155,23 +155,6 @@ void setup() {
 uint64_t lastDataRead = 0;
 
 bool gotAck = false;
-
-// struct header {
-//   uint8_t StartMarker;
-//   Command Cmd;
-//   uint8_t EndMarker;
-// };
-
-// void PrintHeader(header *h) {
-//   Serial2.println("HEADER:");
-//   Serial2.print("  StartMarker: ");
-//   Serial2.println(h->StartMarker);
-//   Serial2.print("  Command    : ");
-//   Serial2.println(CommandToStr(h->Cmd));
-//   Serial2.print("  EndMarker  : ");
-//   Serial2.println(h->EndMarker);
-//   Serial2.println();
-// }
 
 struct UIWindowPacket {
   uint8_t StartMarker;

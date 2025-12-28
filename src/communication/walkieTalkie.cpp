@@ -1,6 +1,6 @@
 #include "walkieTalkie.h"
 #include "HardwareSerial.h"
-#include "logger/logger.h"
+#include "logger.h"
 #include "communication/commands.h"
 #include "communication/communication.h"
 #include <cstdint>
