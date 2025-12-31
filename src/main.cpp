@@ -19,10 +19,10 @@ to have more ways to run analytics
 #include "logger.h"
 #include "values.h"
 #include "windowPool.h"
+#include "methods/methods.h"
 // #include "UIDrawing.h"
 #include "UIString.h"
 // #include "UITable.h"
-// #include "data.h"
 #include "displaySetup.h"
 #include "esp32-hal-psram.h"
 // #include "ui.h"
@@ -156,24 +156,6 @@ uint64_t lastDataRead = 0;
 
 bool gotAck = false;
 
-struct UICreateWindowPacket {
-  uint16_t x0;
-  uint16_t y0;
-  uint16_t width;
-  uint16_t height;
-  char title[32]; // Note: we optimize this type of data transfer if necessary
-                  // we are sending 32 - len(title) extra bytes everytime
-};
-
-void printUIWindowPacket(UICreateWindowPacket *win) {
-  LOG_INFO(F("New window:\n"));
-  LOG_INFO(F("  X0    : %d\n"), win->x0);
-  LOG_INFO(F("  Y0    : %d\n"), win->y0);
-  LOG_INFO(F("  Width : %d\n"), win->width);
-  LOG_INFO(F("  Height: %d\n"), win->height);
-  LOG_INFO(F("  Title : %s\n"), win->title);
-}
-
 uint64_t lastSent = 0;
 void loop(void) {
   uint64_t cur = millis();
@@ -201,28 +183,15 @@ void loop(void) {
         WalkieTalkie::SendData(&papers);
         break;
       case CmdCreateWindow: {
-        // Here we parse the payload a a UIWindowPacket
-        UICreateWindowPacket win;
-        memcpy(&win, payload, sizeof(UICreateWindowPacket));
-        printUIWindowPacket(&win);
-
-        UIElement *mainWindow = mainScreen.mainWindowHandle;
-
-        int16_t childID = mainWindow->AddChild(STRING);
-        if (childID < 0) {
+        uint8_t newWindowID = CreateWindow::Create(payload, &mainScreen);
+        if (newWindowID < 0) {
           LOG_WARN(F("Failed to add new window!\n"));
-        } else {
-          LOG_INFO(F("Successfully added a new window: %d\n"), childID);
-
-          UIElement *childComponent = mainWindow->GetChild(childID);
-
-          childComponent->SetTitle((char *)"%s [%2d]", (const char *)win.title, childID);
-          childComponent->SetUIDecorations(UIDecorations());
-          childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
-          childComponent->SetDisplay(mainScreen.display);
-
-          childComponent->drawBox();
+          break;
         }
+
+        LOG_INFO(F("Successfully added a new window: %d\n"), newWindowID);
+        
+        // Now we return the ID of this new window - esdi should expect it
 
         break;
       }
