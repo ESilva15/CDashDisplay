@@ -41,4 +41,19 @@ namespace CreateWindow {
 };
 
 namespace DestroyWindow {
+  void printUIDestroyWindowPacket(UIDestroyWindowPacket *win) {
+    LOG_INFO(F("Destroy window:\n"));
+    LOG_INFO(F("  WinID: %d\n"), win->WinID);
+  }
+
+  int8_t Destroy(uint8_t *payload, Curses::Screen *mainScreen) {
+    DestroyWindow::UIDestroyWindowPacket win;
+    memcpy(&win, payload, sizeof(DestroyWindow::UIDestroyWindowPacket));
+    printUIDestroyWindowPacket(&win);
+
+    UIElement *mainWindow = mainScreen->mainWindowHandle;
+    mainWindow->RemoveChild(win.WinID);
+
+    return win.WinID;
+  }
 };

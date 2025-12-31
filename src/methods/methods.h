@@ -20,6 +20,12 @@ namespace CreateWindow {
 };
 
 namespace DestroyWindow {
+  struct UIDestroyWindowPacket {
+    int16_t WinID;
+  };
+
+  void printUIDestroyWindowPacket(UIDestroyWindowPacket *win);
+  int8_t Destroy(uint8_t *payload, Curses::Screen *mainScreen);
 };
 
 #endif

@@ -195,6 +195,17 @@ void loop(void) {
 
         break;
       }
+      case CmdDestroyWindow: {
+        uint8_t destroyedWinID = DestroyWindow::Destroy(payload, &mainScreen);
+        if (destroyedWinID < 0) {
+          LOG_WARN(F("Failed to destroy window\n"));
+          break;
+        }
+
+        LOG_INFO(F("Succesfully destroy window: %d\n"), destroyedWinID);
+
+        break;
+      }
       default:
         LOG_WARN(F("Command: `%s` has not been implemented yet."), CommandToStr(cmd));
     }
