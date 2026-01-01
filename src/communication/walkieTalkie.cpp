@@ -40,7 +40,7 @@ namespace WalkieTalkie {
   }
 
   static inline void RecvPayloadRoutine(uint8_t *payload, byte *b) {
-    LOG_TRACE(F("Reading payload: %d %s %d\n"), bufferIndex, " - ", *b);
+    LOG_TRACE(F("Reading payload: %-.3d %s 0x%02x\n"), bufferIndex, " - ", *b);
 
     buffer[bufferIndex++] = *b;
     if (bufferIndex == len) {

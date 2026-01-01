@@ -55,7 +55,6 @@ Arduino_ESP32RGBPanel *panel = new Arduino_ESP32RGBPanel(
 //
 Arduino_GFX *gfx = new Arduino_RGB_Display(TFT_HOR_RES, TFT_VER_RES, panel, 16);
 
-// HardwareSerial debugSerial(1);
 Curses::Screen mainScreen(gfx, UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
                           UIDecorations());
 
@@ -85,78 +84,13 @@ void setup() {
 
   // Only setup the main screen after initializing the Serial2
   mainScreen.Setup("Main Window");
-
-  // Grab a handle for the main window of the screen
   UIElement *mainWindow = mainScreen.mainWindowHandle;
   mainWindow->drawBox();
-
-  // int16_t childID = mainWindow->AddChild(STRING);
-  // if (childID < 0) {
-  //   Serial2.println("Failed to add new window!");
-  // } else {
-  //   Serial2.print("Successfully added a new window: ");
-  //   Serial2.println(childID);
-  //
-  //   UIElement *childComponent = mainWindow->GetChild(childID);
-  //
-  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Child Window",
-  //                            childID);
-  //   childComponent->SetUIDecorations(UIDecorations());
-  //   childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
-  //   childComponent->SetDisplay(mainScreen.display);
-  //
-  //   childComponent->drawBox();
-  // }
-  //
-  // childID = mainWindow->AddChild(STRING);
-  // if (childID < 0) {
-  //   Serial2.println("Failed to add new window!");
-  // } else {
-  //   Serial2.print("Successfully added a new window: ");
-  //   Serial2.println(childID);
-  //
-  //   UIElement *childComponent = mainWindow->GetChild(childID);
-  //
-  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Second Child",
-  //                            childID);
-  //   childComponent->SetUIDecorations(UIDecorations());
-  //   childComponent->SetUIDimensions(UIDimensions(330, 20, 300, 300));
-  //   childComponent->SetDisplay(mainScreen.display);
-  //
-  //   childComponent->drawBox();
-  // }
-  //
-  // mainWindow->RemoveChild(1);
-  //
-  // childID = mainWindow->AddChild(STRING);
-  // if (childID < 0) {
-  //   Serial2.println("Failed to add new window!");
-  // } else {
-  //   Serial2.print("Successfully added a new window: ");
-  //   Serial2.println(childID);
-  //
-  //   UIElement *childComponent = mainWindow->GetChild(childID);
-  //
-  //   childComponent->SetTitle((char *)"%s [%2d]", (const char *)"Third Child",
-  //                            childID);
-  //   childComponent->SetUIDecorations(UIDecorations());
-  //   childComponent->SetUIDimensions(UIDimensions(20, 20, 300, 300));
-  //   childComponent->SetDisplay(mainScreen.display);
-  //
-  //   childComponent->drawBox();
-  // }
-
-  WindowPool::PrintInUse();
 
   delay(500);
   LOG_INFO(F("* Ready for loop"));
 }
 
-uint64_t lastDataRead = 0;
-
-bool gotAck = false;
-
-uint64_t lastSent = 0;
 void loop(void) {
   uint64_t cur = millis();
 
@@ -183,7 +117,7 @@ void loop(void) {
         WalkieTalkie::SendData(&papers);
         break;
       case CmdCreateWindow: {
-        uint8_t newWindowID = CreateWindow::Create(payload, &mainScreen);
+        uint8_t newWindowID = Window::Create(payload, &mainScreen);
         if (newWindowID < 0) {
           LOG_WARN(F("Failed to add new window!\n"));
           break;
@@ -196,7 +130,7 @@ void loop(void) {
         break;
       }
       case CmdDestroyWindow: {
-        uint8_t destroyedWinID = DestroyWindow::Destroy(payload, &mainScreen);
+        uint8_t destroyedWinID = Window::Destroy(payload, &mainScreen);
         if (destroyedWinID < 0) {
           LOG_WARN(F("Failed to destroy window\n"));
           break;
