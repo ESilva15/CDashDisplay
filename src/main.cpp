@@ -124,8 +124,11 @@ void loop(void) {
         }
 
         LOG_INFO(F("Successfully added a new window: %d\n"), newWindowID);
-        
+
         // Now we return the ID of this new window - esdi should expect it
+        WindowIDReply wID;
+        initWindowIDReply(&wID, newWindowID);
+        WalkieTalkie::SendData(&wID);
 
         break;
       }

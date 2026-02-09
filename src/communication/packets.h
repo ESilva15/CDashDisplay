@@ -27,4 +27,12 @@ struct __attribute__((packed)) NewWindowBody {
   char EndMarker;
 };
 
+struct __attribute__((packed)) WindowIDReply {
+  char StarMarker;
+  int16_t wID;
+  char EndMarker;
+};
+
+void initWindowIDReply(WindowIDReply* pkt, int16_t id);
+
 #endif

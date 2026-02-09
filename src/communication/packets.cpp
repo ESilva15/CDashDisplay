@@ -16,3 +16,11 @@ void initIdentificationPacket(IdentificationPacket* packet, const char* name,
   strncpy(packet->deviceName, name, strlen(name));
   packet->deviceName[strlen(name)] = '\0';
 }
+
+void initWindowIDReply(WindowIDReply* pkt, int16_t id) {
+  memset(pkt, 0, sizeof(*pkt));
+
+  pkt->StarMarker = 0x02;
+  pkt->EndMarker = 0x03;
+  pkt->wID = id;
+}
