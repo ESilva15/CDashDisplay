@@ -1,5 +1,7 @@
 #include "methods.h"
 #include "Arduino.h"
+#include "UIDrawing.h"
+#include "communication/packets.h"
 #include "logger.h"
 #include "UIComponent.h"
 #include "UIScreen.h"
@@ -8,13 +10,17 @@
 
 namespace Window {
   // Window creation
+  void printUIDimsPacket(UIDimensions *dims) {
+    LOG_INFO(F("  Dimensions:\n"));
+    LOG_INFO(F("    X0    : %d\n"), dims->x);
+    LOG_INFO(F("    Y0    : %d\n"), dims->y);
+    LOG_INFO(F("    Width : %d\n"), dims->width);
+    LOG_INFO(F("    Height: %d\n"), dims->height);
+  }
+
   void printUIWindowPacket(UICreateWindowPacket *win) {
     LOG_INFO(F("New window:\n"));
-    LOG_INFO(F("  Dimensions:\n"));
-    LOG_INFO(F("    X0    : %d\n"), win->dims.x);
-    LOG_INFO(F("    Y0    : %d\n"), win->dims.y);
-    LOG_INFO(F("    Width : %d\n"), win->dims.width);
-    LOG_INFO(F("    Height: %d\n"), win->dims.height);
+    printUIDimsPacket(&win->dims);
     LOG_INFO(F("  Decorations:\n"));
     LOG_INFO(F("    HasBorder   : %d\n"), win->decor.hasBorder);
     LOG_INFO(F("    BGColour    : %d\n"), win->decor.bgColor);
@@ -24,6 +30,12 @@ namespace Window {
     LOG_INFO(F("    TitleSize   : %d\n"), win->decor.titleSize);
     LOG_INFO(F("    TextSize    : %d\n"), win->decor.textSize);
     LOG_INFO(F("  Title: %s\n"), win->title);
+  }
+
+  void printUpdateDimsPacket(UpdateDimsPacket *pkt) {
+    LOG_INFO(F("NEW DIMENSIONS:\n"));
+    LOG_INFO(F("  TARGET WINDOW: %d\n"), pkt->wID);
+    printUIDimsPacket(&pkt->dims);
   }
 
   UICreateWindowPacket::UICreateWindowPacket() {}
@@ -54,6 +66,30 @@ namespace Window {
     childComponent->drawBox();
 
     return childID;
+  }
+
+  bool UpdateDims(uint8_t *payload, Curses::Screen *mainScreen) {
+    UpdateDimsPacket pkt;
+    memcpy((void*)&pkt, payload, sizeof(UpdateDimsPacket));
+    printUpdateDimsPacket(&pkt);
+
+    UIElement *mainWindow = mainScreen->mainWindowHandle;
+    UIElement* win = mainWindow->GetChild(pkt.wID);
+    if (win == NULL) {
+      return false;
+    }
+
+    // Delete the old window
+    fillRect(win->dims.x, win->dims.y, win->dims.width,
+             win->dims.height, win->decor.bgColor, win->display);
+
+    // Update the windows dimensions
+    win->dims = pkt.dims;
+
+    // Redraw the window
+    win->drawBox();
+
+    return true;
   }
 
   // Window destruction

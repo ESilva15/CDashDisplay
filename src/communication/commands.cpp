@@ -10,6 +10,8 @@ char* CommandToStr(Command id) {
       return (char*)"CmdCreateWindow";
     case CmdDestroyWindow:
       return (char*)"CmdDestroyWindow";
+    case CmdUpdateWinDims:
+      return (char*)"CmdUpdateWinDims";
     default:
       return (char*)"CmdUnknown";
   }

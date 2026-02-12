@@ -132,6 +132,11 @@ void loop(void) {
 
         break;
       }
+      case CmdUpdateWinDims: {
+        LOG_INFO(F("Updating Win\n"));
+        Window::UpdateDims(payload, &mainScreen);
+        break;
+      }
       case CmdDestroyWindow: {
         uint8_t destroyedWinID = Window::Destroy(payload, &mainScreen);
         if (destroyedWinID < 0) {

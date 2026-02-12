@@ -1,6 +1,7 @@
 #ifndef __PACKETS__
 #define __PACKETS__
 
+#include "UIDimensions.h"
 #include <stdint.h>
 
 typedef uint8_t PacketType;

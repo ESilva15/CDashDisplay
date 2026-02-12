@@ -28,6 +28,15 @@ namespace Window {
 
   void printUIDestroyWindowPacket(UIDestroyWindowPacket *win);
   int8_t Destroy(uint8_t *payload, Curses::Screen *mainScreen);
+
+  // Window Updates
+  struct UpdateDimsPacket {
+    int16_t wID;
+    UIDimensions dims;
+  };
+
+  void printUpdateDimsPacket(UpdateDimsPacket *pkt);
+  bool UpdateDims(uint8_t *payload, Curses::Screen *mainScreen);
 };
 
 namespace Screen {
