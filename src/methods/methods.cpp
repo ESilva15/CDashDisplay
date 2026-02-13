@@ -1,5 +1,6 @@
 #include "methods.h"
 #include "Arduino.h"
+#include "UIDecorations.h"
 #include "UIDrawing.h"
 #include "communication/packets.h"
 #include "logger.h"
@@ -18,17 +19,21 @@ namespace Window {
     LOG_INFO(F("    Height: %d\n"), dims->height);
   }
 
+  void printUIDecorPacket(UIDecorations *decor) {
+    LOG_INFO(F("  Decorations:\n"));
+    LOG_INFO(F("    HasBorder   : %d\n"), decor->hasBorder);
+    LOG_INFO(F("    BGColour    : %d\n"), decor->bgColor);
+    LOG_INFO(F("    FGColour    : %d\n"), decor->fgColor);
+    LOG_INFO(F("    TitleColour : %d\n"), decor->titleColor);
+    LOG_INFO(F("    BorderColour: %d\n"), decor->borderColor);
+    LOG_INFO(F("    TitleSize   : %d\n"), decor->titleSize);
+    LOG_INFO(F("    TextSize    : %d\n"), decor->textSize);
+  }
+
   void printUIWindowPacket(UICreateWindowPacket *win) {
     LOG_INFO(F("New window:\n"));
     printUIDimsPacket(&win->dims);
-    LOG_INFO(F("  Decorations:\n"));
-    LOG_INFO(F("    HasBorder   : %d\n"), win->decor.hasBorder);
-    LOG_INFO(F("    BGColour    : %d\n"), win->decor.bgColor);
-    LOG_INFO(F("    FGColour    : %d\n"), win->decor.fgColor);
-    LOG_INFO(F("    TitleColour : %d\n"), win->decor.titleColor);
-    LOG_INFO(F("    BorderColour: %d\n"), win->decor.borderColor);
-    LOG_INFO(F("    TitleSize   : %d\n"), win->decor.titleSize);
-    LOG_INFO(F("    TextSize    : %d\n"), win->decor.textSize);
+    printUIDecorPacket(&win->decor);
     LOG_INFO(F("  Title: %s\n"), win->title);
   }
 
@@ -87,6 +92,32 @@ namespace Window {
     win->dims = pkt.dims;
 
     // Redraw the window
+    win->drawBox();
+
+    return true;
+  }
+
+  bool UpdateWindow(uint8_t *payload, Curses::Screen *mainScreen) {
+    UIUpdateWindowPacket pkt;
+    memcpy((void*)&pkt, payload, sizeof(UICreateWindowPacket));
+
+    printUIWindowPacket(&pkt.data);
+
+    UIElement* mainWindow = mainScreen->mainWindowHandle;
+    UIElement* win = mainWindow->GetChild(pkt.WinID);
+    if (win == NULL) {
+      return false;
+    }
+
+    // Delete the old window
+    fillRect(win->dims.x, win->dims.y, win->dims.width,
+             win->dims.height, win->decor.bgColor, win->display);
+
+    // Update the windows dimensons, decor and title
+    win->dims = pkt.data.dims;
+    win->decor = pkt.data.decor;
+    win->SetTitle((char*)"%s [ %d]", pkt.data.title, pkt.WinID);
+
     win->drawBox();
 
     return true;

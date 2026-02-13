@@ -12,6 +12,7 @@ to have more ways to run analytics
 #include "UIComponent.h"
 #include "UIDecorations.h"
 #include "UIDimensions.h"
+#include "UIDrawing.h"
 #include "UIScreen.h"
 #include "communication/commands.h"
 #include "communication/packets.h"
@@ -133,10 +134,21 @@ void loop(void) {
         break;
       }
       case CmdUpdateWinDims: {
-        LOG_INFO(F("Updating Win\n"));
-        Window::UpdateDims(payload, &mainScreen);
+        LOG_INFO(F("Updating Win DIMS\n"));
+        bool res = Window::UpdateDims(payload, &mainScreen);
+        if (!res) {
+          LOG_WARN(F("Failed to update window dims\n"));
+        }
         break;
-      }
+      };
+      case CmdUpdateWin: {
+        LOG_INFO(F("UPDATEING WINDOW\n")); 
+        bool res = Window::UpdateWindow(payload, &mainScreen);
+        if (!res) {
+          LOG_WARN(F("Failed to update window\n"));
+        }
+        break; 
+      }      
       case CmdDestroyWindow: {
         uint8_t destroyedWinID = Window::Destroy(payload, &mainScreen);
         if (destroyedWinID < 0) {
