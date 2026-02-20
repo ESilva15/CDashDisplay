@@ -30,10 +30,18 @@ namespace Window {
     LOG_INFO(F("    TextSize    : %d\n"), decor->textSize);
   }
 
+  void printUIOptionsPacket(UIWindowOpts* opts) {
+    LOG_INFO(F("  Options:\n"));
+    LOG_INFO(F("    ShowID      : %d\n"), opts->ShowID);
+    LOG_INFO(F("    Type        : %d\n"), opts->WinType);
+    LOG_INFO(F("    PreviewValue: %s\n"), opts->PreviewValue);
+  }
+
   void printUIWindowPacket(UICreateWindowPacket *win) {
     LOG_INFO(F("New window:\n"));
     printUIDimsPacket(&win->dims);
     printUIDecorPacket(&win->decor);
+    printUIOptionsPacket(&win->opts);
     LOG_INFO(F("  Title: %s\n"), win->title);
   }
 
@@ -44,6 +52,14 @@ namespace Window {
   }
 
   UICreateWindowPacket::UICreateWindowPacket() {}
+
+  void setTitleWithOpts(UICreateWindowPacket* win, UIElement* elem, int16_t ID) {
+    if (win->opts.ShowID == ShowIDTrue) {
+      elem->SetTitle((char *)"%s [%2d]", (const char *)win->title, ID);
+    } else {
+      elem->SetTitle((char *)"%s", (const char *)win->title);
+    }
+  }
 
   int8_t Create(uint8_t *payload, Curses::Screen *mainScreen) {
     // Load the payload into a struct
@@ -62,13 +78,14 @@ namespace Window {
 
     UIElement *childComponent = mainWindow->GetChild(childID);
 
-    childComponent->SetTitle((char *)"%s [%2d]", (const char *)win.title, childID);
-    childComponent->SetUIDecorations(UIDecorations());
+    setTitleWithOpts(&win, childComponent, childID);
+    childComponent->SetUIDecorations(win.decor);
     childComponent->SetUIDimensions(UIDimensions(win.dims.x, win.dims.y, 
                                                  win.dims.width, win.dims.height));
     childComponent->SetDisplay(mainScreen->display);
 
     childComponent->drawBox();
+    childComponent->Update(win.opts.PreviewValue, true);
 
     return childID;
   }
@@ -93,6 +110,7 @@ namespace Window {
 
     // Redraw the window
     win->drawBox();
+    win->Redraw();
 
     return true;
   }
@@ -116,9 +134,10 @@ namespace Window {
     // Update the windows dimensons, decor and title
     win->dims = pkt.data.dims;
     win->decor = pkt.data.decor;
-    win->SetTitle((char*)"%s [ %d]", pkt.data.title, pkt.WinID);
+    setTitleWithOpts(&pkt.data, win, pkt.WinID);
 
     win->drawBox();
+    win->Update(pkt.data.opts.PreviewValue, true);
 
     return true;
   }

@@ -8,10 +8,21 @@
 #include "UIDecorations.h"
 
 namespace Window {
+  const uint8_t ShowIDFalse = 0;
+  const uint8_t ShowIDTrue = 1;
+
+  struct UIWindowOpts {
+    uint8_t ShowID;
+    uint8_t WinType;
+    // NOTE: I recon we need to change this yo
+    char PreviewValue[32];
+  };
+
   // Window creation
   struct UICreateWindowPacket {
     UIDimensions dims;
     UIDecorations decor;
+    UIWindowOpts opts;
     char title[32]; // Note: we optimize this type of data transfer if necessary
                     // we are sending 32 - len(title) extra bytes everytime
 
