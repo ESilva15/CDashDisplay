@@ -160,6 +160,15 @@ void loop(void) {
 
         break;
       }
+      case CMDData: {
+        // Data groups of: windowData {
+        //   idx  int16 4  bytes
+        //   data char* 32 bytes
+        // }
+        // Packet will be: Data {
+        //   [windowData]
+        // }
+      }
       default:
         LOG_WARN(F("Command: `%s` has not been implemented yet."), CommandToStr(cmd));
     }

@@ -10,7 +10,8 @@ typedef enum : uint8_t {
     CmdCreateWindow = 3,
     CmdDestroyWindow = 4,
     CmdUpdateWinDims = 5, // NOTE: change this to a move cmd instead
-    CmdUpdateWin = 6
+    CmdUpdateWin = 6,
+    CMDData = 7,
 } Command;
 
 char* CommandToStr(Command id);
