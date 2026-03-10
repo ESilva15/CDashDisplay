@@ -70,4 +70,20 @@ namespace Screen {
   };
 }
 
+namespace Data {
+  typedef uint8_t DataType;
+  const DataType DataTypeUINT8 = 0;
+  const DataType DataTypeINT8 = 1;
+  const DataType DataTypeUINT16 = 2;
+  const DataType DataTypeINT16 = 3;
+  const DataType DataTypeUINT32 = 4;
+  const DataType DataTypeINT32 = 5;
+  const DataType DataTypeUINT64 = 6;
+  const DataType DataTypeINT64 = 7;
+  const DataType DataTypeSTRING = 8;
+  const DataType DataTypeCHAR = 9;
+
+  uint8_t Parse(uint8_t *payload, size_t payloadSize);
+}
+
 #endif

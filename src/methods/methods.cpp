@@ -159,3 +159,105 @@ namespace Window {
     return win.WinID;
   }
 };
+
+namespace Data {
+  uint8_t Parse(uint8_t *payload, size_t payloadSize) {
+    uint16_t curPos = 0;
+
+    for (; curPos < payloadSize;) {
+      // Get the data type from the current position
+      uint8_t type = payload[curPos];
+    
+      switch (type) {
+        case DataTypeUINT8: {
+          uint8_t value = payload[curPos + 1];
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 2;
+          break;
+        }
+        case DataTypeINT8: {
+          int8_t value = (int8_t)payload[curPos + 1];
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 2;
+          break;
+        }
+        case DataTypeUINT16: {
+          uint16_t value;
+          memcpy(&value, payload + curPos + 1, 2);
+
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 3; // 1 (Type) + 2 (Value)
+          break;
+        }
+        case DataTypeINT16: {
+          int16_t value;
+          memcpy(&value, payload + curPos + 1, 2);
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 3;
+          break;
+        }
+        case DataTypeUINT32: {
+          uint32_t value;
+          memcpy(&value, payload + curPos + 1, 4);
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 5; // 1 (Type) + 4 (Value)
+          break;
+        }
+        case DataTypeINT32: {
+          int32_t value;
+          memcpy(&value, payload + curPos + 1, 4);
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 5;
+          break;
+        }
+        case DataTypeUINT64: {
+          uint64_t value;
+          memcpy(&value, payload + curPos + 1, 8);
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 9; // 1 (Type) + 8 (Value)
+          break;
+        }
+        case DataTypeINT64: {
+          int64_t value;
+          memcpy(&value, payload + curPos + 1, 8);
+          LOG_WARN(F("RECEIVED: %d\n"), value);
+
+          curPos += 9;
+          break;
+        }
+        case DataTypeCHAR: {
+          uint8_t value = payload[curPos + 1];
+          LOG_WARN(F("RECEIVED: %c\n"), value);
+
+          curPos += 2;
+          break;
+        }
+        case DataTypeSTRING: {
+          // Strings have: Type (1), Len (1), Data (Len)
+          uint8_t len = payload[curPos + 1];
+          char strValue[len + 1];
+          memcpy(strValue, payload + curPos + 2, len);
+          strValue[len] = '\0'; // Null terminator
+                                //
+          LOG_WARN(F("RECEIVED [%d]: %s\n"), len, strValue);
+          
+          curPos += (2 + len); 
+          break;
+        }
+        default:
+          // If we hit an unknown type, we are desynced. 
+          // Better to stop than to read garbage.
+          LOG_ERROR(F("Unknown Type 0x%02X at pos %d"), type, curPos);
+      }
+    }
+
+    return 0;
+  }
+}

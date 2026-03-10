@@ -92,14 +92,16 @@ void setup() {
   LOG_INFO(F("* Ready for loop"));
 }
 
+const uint16_t PayloadMax = 2056;
+
 void loop(void) {
   uint64_t cur = millis();
 
   Command cmd = CmdUnknown;
-  uint8_t payload[256] = {0};
+  uint8_t payload[PayloadMax] = {0};
 
   if (Serial.available() > 0) {
-    int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, 256);
+    int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, PayloadMax);
     if (resp < 0) {
       LOG_WARN(F("Failed to receive data from serial"));
       return;
@@ -168,9 +170,35 @@ void loop(void) {
         // Packet will be: Data {
         //   [windowData]
         // }
+        LOG_WARN(F("Data Received: %d bytes\n"), resp);
+        
+        char lineBuffer[32]; // Enough for "XX XX XX XX XX XX XX XX "
+        int pos = 0;
+        
+        for (int k = 0; k < resp; k++) {
+            // Write 2 hex digits and a space to our local buffer
+            // %02X ensures leading zeros (e.g., 0A instead of A)
+            pos += sprintf(lineBuffer + pos, "%02X ", payload[k]);
+        
+            // Every 8 bytes OR if it's the very last byte in the payload
+            if ((k + 1) % 8 == 0 || k == resp - 1) {
+                // Send the completed line to the logger
+                // We use LOG_DEBUG or similar so we don't spam [WARN] on every line
+                Logger::Printf(F("%s\n"), lineBuffer);
+                
+                // Reset buffer position for the next line
+                pos = 0;
+                memset(lineBuffer, 0, sizeof(lineBuffer));
+            }
+        }
+        LOG_WARN(F("\n"));
+
+        Data::Parse(payload, resp);
+
+        break;
       }
       default:
-        LOG_WARN(F("Command: `%s` has not been implemented yet."), CommandToStr(cmd));
+        LOG_WARN(F("Unknown Command: `%d` has not been implemented yet."), cmd);
     }
   }
 }
