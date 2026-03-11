@@ -193,7 +193,7 @@ void loop(void) {
         }
         LOG_WARN(F("\n"));
 
-        Data::Parse(payload, resp);
+        Data::Parse(payload, resp, &mainScreen);
 
         break;
       }

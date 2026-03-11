@@ -83,7 +83,7 @@ namespace Data {
   const DataType DataTypeSTRING = 8;
   const DataType DataTypeCHAR = 9;
 
-  uint8_t Parse(uint8_t *payload, size_t payloadSize);
+  uint8_t Parse(uint8_t *payload, size_t payloadSize, Curses::Screen* mainScreen);
 }
 
 #endif

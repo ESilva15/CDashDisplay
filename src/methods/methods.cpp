@@ -7,6 +7,7 @@
 #include "UIComponent.h"
 #include "UIScreen.h"
 #include <cstdint>
+#include <cstdio>
 #include <string.h>
 
 namespace Window {
@@ -161,8 +162,10 @@ namespace Window {
 };
 
 namespace Data {
-  uint8_t Parse(uint8_t *payload, size_t payloadSize) {
+  uint8_t Parse(uint8_t *payload, size_t payloadSize, Curses::Screen* mainScreen) {
     uint16_t curPos = 0;
+
+    char buffer[128];
 
     for (; curPos < payloadSize;) {
       // Get the data type from the current position
@@ -177,12 +180,16 @@ namespace Data {
           uint8_t value = payload[curPos + 1];
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
+          sprintf(buffer, "%d", value);
+
           curPos += 2;
           break;
         }
         case DataTypeINT8: {
           int8_t value = (int8_t)payload[curPos + 1];
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+
+          sprintf(buffer, "%d", value);
 
           curPos += 2;
           break;
@@ -192,6 +199,7 @@ namespace Data {
           memcpy(&value, payload + curPos + 1, 2);
 
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%d", value);
 
           curPos += 3; // 1 (Type) + 2 (Value)
           break;
@@ -200,6 +208,7 @@ namespace Data {
           int16_t value;
           memcpy(&value, payload + curPos + 1, 2);
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%d", value);
 
           curPos += 3;
           break;
@@ -208,6 +217,7 @@ namespace Data {
           uint32_t value;
           memcpy(&value, payload + curPos + 1, 4);
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%d", value);
 
           curPos += 5; // 1 (Type) + 4 (Value)
           break;
@@ -216,6 +226,7 @@ namespace Data {
           int32_t value;
           memcpy(&value, payload + curPos + 1, 4);
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%d", value);
 
           curPos += 5;
           break;
@@ -224,6 +235,7 @@ namespace Data {
           uint64_t value;
           memcpy(&value, payload + curPos + 1, 8);
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%ld", value);
 
           curPos += 9; // 1 (Type) + 8 (Value)
           break;
@@ -232,6 +244,7 @@ namespace Data {
           int64_t value;
           memcpy(&value, payload + curPos + 1, 8);
           LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          sprintf(buffer, "%ld", value);
 
           curPos += 9;
           break;
@@ -239,6 +252,7 @@ namespace Data {
         case DataTypeCHAR: {
           uint8_t value = payload[curPos + 1];
           LOG_WARN(F("RECEIVED [%2d]: %c\n"), wID, value);
+          sprintf(buffer, "%c", value);
 
           curPos += 2;
           break;
@@ -251,6 +265,7 @@ namespace Data {
           strValue[len] = '\0'; // Null terminator
                                 //
           LOG_WARN(F("RECEIVED [%2d] [%d]: %s\n"), wID, len, strValue);
+          sprintf(buffer, "%s", strValue);
           
           curPos += (2 + len); 
           break;
@@ -259,7 +274,17 @@ namespace Data {
           // If we hit an unknown type, we are desynced. 
           // Better to stop than to read garbage.
           LOG_ERROR(F("Unknown Type 0x%02X at pos %d"), type, curPos);
+          continue;
       }
+
+      // Update the window value here 
+      UIElement* mainWindow = mainScreen->mainWindowHandle;
+      UIElement* win = mainWindow->GetChild(wID);
+      if (win == NULL) {
+        continue;
+      }
+
+      win->Update(buffer, false);
     }
 
     return 0;
