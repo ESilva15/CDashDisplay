@@ -23,6 +23,8 @@ to have more ways to run analytics
 #include "methods/methods.h"
 // #include "UIDrawing.h"
 #include "UIString.h"
+#include "UIGenericWindow.h"
+#include "dataContainer.h"
 // #include "UITable.h"
 #include "displaySetup.h"
 #include "esp32-hal-psram.h"
@@ -71,6 +73,19 @@ Curses::Screen mainScreen(gfx, UIDimensions(0, 0, TFT_HOR_RES, TFT_VER_RES),
 //     (char*)"MAIN WINDOW"
 // );
 
+UIString s;
+        // Arduino_GFX* d, 
+        // void* data, 
+        // RenderDelegate r,
+        // IValueProvider* vp,
+        // UIDimensions dims,
+        // UIDecorations decor,
+        // char* title
+
+StrContainer vp = StrContainer();
+UIGenericWindow w = UIGenericWindow(gfx, NULL, NULL, &vp, 
+    UIDimensions(350, 40, 300, 300), UIDecorations(), (char*)"Generic");
+
 void setup() {
   psramInit();
   Serial.begin(115200);
@@ -84,121 +99,129 @@ void setup() {
   initialDisplaySetup(gfx);
 
   // Only setup the main screen after initializing the Serial2
-  mainScreen.Setup("Main Window");
-  UIElement *mainWindow = mainScreen.mainWindowHandle;
-  mainWindow->drawBox();
+  // mainScreen.Setup("Main Window");
+  // UIElement *mainWindow = mainScreen.mainWindowHandle;
+  // mainWindow->drawBox();
 
   delay(500);
   LOG_INFO(F("* Ready for loop"));
+
+  s = UIString(gfx, UIDimensions(40, 40, 300, 300), UIDecorations(), 
+              (char*)"Title");
+  s.drawBox();
+  s.Update("Hello", false);
+
+  w.drawBox();
 }
 
 const uint16_t PayloadMax = 2056;
 
 void loop(void) {
-  uint64_t cur = millis();
-
-  Command cmd = CmdUnknown;
-  uint8_t payload[PayloadMax] = {0};
-
-  if (Serial.available() > 0) {
-    int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, PayloadMax);
-    if (resp < 0) {
-      LOG_WARN(F("Failed to receive data from serial"));
-      return;
-    } else if (resp == 0) {
-      LOG_INFO(F("No data to receive"));
-      return;
-    }
-
-    LOG_INFO(F("Command: %s\n"), CommandToStr(cmd));
-    LOG_INFO(F("Response Payload Len: %d\n"), resp);
-
-    switch(cmd) {
-      case CmdRequestID:
-        IdentificationPacket papers;
-        initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID); 
-        WalkieTalkie::SendData(&papers);
-        break;
-      case CmdCreateWindow: {
-        uint8_t newWindowID = Window::Create(payload, &mainScreen);
-        if (newWindowID < 0) {
-          LOG_WARN(F("Failed to add new window!\n"));
-          break;
-        }
-
-        LOG_INFO(F("Successfully added a new window: %d\n"), newWindowID);
-
-        // Now we return the ID of this new window - esdi should expect it
-        WindowIDReply wID;
-        initWindowIDReply(&wID, newWindowID);
-        WalkieTalkie::SendData(&wID);
-
-        break;
-      }
-      case CmdUpdateWinDims: {
-        LOG_INFO(F("Updating Win DIMS\n"));
-        bool res = Window::UpdateDims(payload, &mainScreen);
-        if (!res) {
-          LOG_WARN(F("Failed to update window dims\n"));
-        }
-        break;
-      };
-      case CmdUpdateWin: {
-        LOG_INFO(F("UPDATEING WINDOW\n")); 
-        bool res = Window::UpdateWindow(payload, &mainScreen);
-        if (!res) {
-          LOG_WARN(F("Failed to update window\n"));
-        }
-        break; 
-      }      
-      case CmdDestroyWindow: {
-        uint8_t destroyedWinID = Window::Destroy(payload, &mainScreen);
-        if (destroyedWinID < 0) {
-          LOG_WARN(F("Failed to destroy window\n"));
-          break;
-        }
-
-        LOG_INFO(F("Succesfully destroy window: %d\n"), destroyedWinID);
-
-        break;
-      }
-      case CMDData: {
-        // Data groups of: windowData {
-        //   idx  int16 4  bytes
-        //   data char* 32 bytes
-        // }
-        // Packet will be: Data {
-        //   [windowData]
-        // }
-        LOG_WARN(F("Data Received: %d bytes\n"), resp);
-        
-        char lineBuffer[32]; // Enough for "XX XX XX XX XX XX XX XX "
-        int pos = 0;
-        
-        for (int k = 0; k < resp; k++) {
-            // Write 2 hex digits and a space to our local buffer
-            // %02X ensures leading zeros (e.g., 0A instead of A)
-            pos += sprintf(lineBuffer + pos, "%02X ", payload[k]);
-        
-            // Every 8 bytes OR if it's the very last byte in the payload
-            if ((k + 1) % 8 == 0 || k == resp - 1) {
-                // Send the completed line to the logger
-                // We use LOG_DEBUG or similar so we don't spam [WARN] on every line
-                Logger::Printf(F("%s\n"), lineBuffer);
-                
-                // Reset buffer position for the next line
-                pos = 0;
-                memset(lineBuffer, 0, sizeof(lineBuffer));
-            }
-        }
-        LOG_WARN(F("\n"));
-
-        Data::Parse(payload, resp);
-
-        break;
-      }
-      default:
-        LOG_WARN(F("Unknown Command: `%d` has not been implemented yet."), cmd);
-    }
-  }
+  return;
+  // uint64_t cur = millis();
+  //
+  // Command cmd = CmdUnknown;
+  // uint8_t payload[PayloadMax] = {0};
+  //
+  // if (Serial.available() > 0) {
+  //   int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, PayloadMax);
+  //   if (resp < 0) {
+  //     LOG_WARN(F("Failed to receive data from serial"));
+  //     return;
+  //   } else if (resp == 0) {
+  //     LOG_INFO(F("No data to receive"));
+  //     return;
+  //   }
+  //
+  //   LOG_INFO(F("Command: %s\n"), CommandToStr(cmd));
+  //   LOG_INFO(F("Response Payload Len: %d\n"), resp);
+  //
+  //   switch(cmd) {
+  //     case CmdRequestID:
+  //       IdentificationPacket papers;
+  //       initIdentificationPacket(&papers, ESLABS_DEVICE_NAME, ESLABS_DEVICE_ID); 
+  //       WalkieTalkie::SendData(&papers);
+  //       break;
+  //     case CmdCreateWindow: {
+  //       uint8_t newWindowID = Window::Create(payload, &mainScreen);
+  //       if (newWindowID < 0) {
+  //         LOG_WARN(F("Failed to add new window!\n"));
+  //         break;
+  //       }
+  //
+  //       LOG_INFO(F("Successfully added a new window: %d\n"), newWindowID);
+  //
+  //       // Now we return the ID of this new window - esdi should expect it
+  //       WindowIDReply wID;
+  //       initWindowIDReply(&wID, newWindowID);
+  //       WalkieTalkie::SendData(&wID);
+  //
+  //       break;
+  //     }
+  //     case CmdUpdateWinDims: {
+  //       LOG_INFO(F("Updating Win DIMS\n"));
+  //       bool res = Window::UpdateDims(payload, &mainScreen);
+  //       if (!res) {
+  //         LOG_WARN(F("Failed to update window dims\n"));
+  //       }
+  //       break;
+  //     };
+  //     case CmdUpdateWin: {
+  //       LOG_INFO(F("UPDATEING WINDOW\n")); 
+  //       bool res = Window::UpdateWindow(payload, &mainScreen);
+  //       if (!res) {
+  //         LOG_WARN(F("Failed to update window\n"));
+  //       }
+  //       break; 
+  //     }      
+  //     case CmdDestroyWindow: {
+  //       uint8_t destroyedWinID = Window::Destroy(payload, &mainScreen);
+  //       if (destroyedWinID < 0) {
+  //         LOG_WARN(F("Failed to destroy window\n"));
+  //         break;
+  //       }
+  //
+  //       LOG_INFO(F("Succesfully destroy window: %d\n"), destroyedWinID);
+  //
+  //       break;
+  //     }
+  //     case CMDData: {
+  //       // Data groups of: windowData {
+  //       //   idx  int16 4  bytes
+  //       //   data char* 32 bytes
+  //       // }
+  //       // Packet will be: Data {
+  //       //   [windowData]
+  //       // }
+  //       LOG_WARN(F("Data Received: %d bytes\n"), resp);
+  //       
+  //       char lineBuffer[32]; // Enough for "XX XX XX XX XX XX XX XX "
+  //       int pos = 0;
+  //       
+  //       for (int k = 0; k < resp; k++) {
+  //           // Write 2 hex digits and a space to our local buffer
+  //           // %02X ensures leading zeros (e.g., 0A instead of A)
+  //           pos += sprintf(lineBuffer + pos, "%02X ", payload[k]);
+  //       
+  //           // Every 8 bytes OR if it's the very last byte in the payload
+  //           if ((k + 1) % 8 == 0 || k == resp - 1) {
+  //               // Send the completed line to the logger
+  //               // We use LOG_DEBUG or similar so we don't spam [WARN] on every line
+  //               Logger::Printf(F("%s\n"), lineBuffer);
+  //               
+  //               // Reset buffer position for the next line
+  //               pos = 0;
+  //               memset(lineBuffer, 0, sizeof(lineBuffer));
+  //           }
+  //       }
+  //       LOG_WARN(F("\n"));
+  //
+  //       Data::Parse(payload, resp);
+  //
+  //       break;
+  //     }
+  //     default:
+  //       LOG_WARN(F("Unknown Command: `%d` has not been implemented yet."), cmd);
+  //   }
+  // }
 }
