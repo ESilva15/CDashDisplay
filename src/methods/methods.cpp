@@ -166,19 +166,23 @@ namespace Data {
 
     for (; curPos < payloadSize;) {
       // Get the data type from the current position
+      int16_t wID;
+      memcpy(&wID, payload + curPos, 2);
+      curPos += 2;
+
       uint8_t type = payload[curPos];
     
       switch (type) {
         case DataTypeUINT8: {
           uint8_t value = payload[curPos + 1];
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 2;
           break;
         }
         case DataTypeINT8: {
           int8_t value = (int8_t)payload[curPos + 1];
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 2;
           break;
@@ -187,7 +191,7 @@ namespace Data {
           uint16_t value;
           memcpy(&value, payload + curPos + 1, 2);
 
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 3; // 1 (Type) + 2 (Value)
           break;
@@ -195,7 +199,7 @@ namespace Data {
         case DataTypeINT16: {
           int16_t value;
           memcpy(&value, payload + curPos + 1, 2);
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 3;
           break;
@@ -203,7 +207,7 @@ namespace Data {
         case DataTypeUINT32: {
           uint32_t value;
           memcpy(&value, payload + curPos + 1, 4);
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 5; // 1 (Type) + 4 (Value)
           break;
@@ -211,7 +215,7 @@ namespace Data {
         case DataTypeINT32: {
           int32_t value;
           memcpy(&value, payload + curPos + 1, 4);
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 5;
           break;
@@ -219,7 +223,7 @@ namespace Data {
         case DataTypeUINT64: {
           uint64_t value;
           memcpy(&value, payload + curPos + 1, 8);
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 9; // 1 (Type) + 8 (Value)
           break;
@@ -227,14 +231,14 @@ namespace Data {
         case DataTypeINT64: {
           int64_t value;
           memcpy(&value, payload + curPos + 1, 8);
-          LOG_WARN(F("RECEIVED: %d\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
 
           curPos += 9;
           break;
         }
         case DataTypeCHAR: {
           uint8_t value = payload[curPos + 1];
-          LOG_WARN(F("RECEIVED: %c\n"), value);
+          LOG_WARN(F("RECEIVED [%2d]: %c\n"), wID, value);
 
           curPos += 2;
           break;
@@ -246,7 +250,7 @@ namespace Data {
           memcpy(strValue, payload + curPos + 2, len);
           strValue[len] = '\0'; // Null terminator
                                 //
-          LOG_WARN(F("RECEIVED [%d]: %s\n"), len, strValue);
+          LOG_WARN(F("RECEIVED [%2d] [%d]: %s\n"), wID, len, strValue);
           
           curPos += (2 + len); 
           break;
