@@ -120,7 +120,7 @@ void loop(void) {
         WalkieTalkie::SendData(&papers);
         break;
       case CmdCreateWindow: {
-        uint8_t newWindowID = Window::Create(payload, &mainScreen);
+        int8_t newWindowID = Window::Create(payload, &mainScreen);
         if (newWindowID < 0) {
           LOG_WARN(F("Failed to add new window!\n"));
           break;

@@ -1,11 +1,13 @@
 #include "methods.h"
 #include "Arduino.h"
+#include "UIBar.h"
 #include "UIDecorations.h"
 #include "UIDrawing.h"
 #include "communication/packets.h"
 #include "logger.h"
 #include "UIComponent.h"
 #include "UIScreen.h"
+#include "values.h"
 #include <cstdint>
 #include <cstdio>
 #include <string.h>
@@ -64,7 +66,6 @@ namespace Window {
 
   int8_t Create(uint8_t *payload, Curses::Screen *mainScreen) {
     // Load the payload into a struct
-    // UICreateWindowPacket* win;
     UICreateWindowPacket win;
     // Maybe find a better way to copy this - if we had metadata to the payload
     // for example
@@ -72,20 +73,43 @@ namespace Window {
     printUIWindowPacket(&win);
 
     UIElement *mainWindow = mainScreen->mainWindowHandle;
-    int16_t childID = mainWindow->AddChild(STRING);
+    int16_t childID = mainWindow->AddChild((ComponentType)win.opts.WinType);
     if (childID < 0) {
+      LOG_DEBUG(F("COULD NOT ADD CHILD\r\n"));
       return -1;
     }
 
     UIElement *childComponent = mainWindow->GetChild(childID);
 
     setTitleWithOpts(&win, childComponent, childID);
+
+    // This are universal things
     childComponent->SetUIDecorations(win.decor);
     childComponent->SetUIDimensions(UIDimensions(win.dims.x, win.dims.y, 
-                                                 win.dims.width, win.dims.height));
+          win.dims.width, win.dims.height));
     childComponent->SetDisplay(mainScreen->display);
 
-    childComponent->drawBox();
+    // NOTE: if I move to a composition style thing I guess I can do all this
+    // setup at start up time.
+    // I can also just have a base void* chunk of data with options I send to
+    // each UI type and the UI type handles it somehow, we'll see
+    // Handle each type of window
+    switch ((ComponentType)win.opts.WinType) {
+      case STRING:
+        LOG_DEBUG(F("Setting up the STRING type UIWindow\r\n"));
+        childComponent->drawBox();
+        break;
+      case BAR: {
+        LOG_DEBUG(F("Setting up the BAR type UIWindow\r\n"));
+        UIBar* bar = (UIBar*)childComponent;
+
+        bar->range = 9;
+        bar->drawBox();
+
+        break;
+      }
+    }
+
     childComponent->Update(win.opts.PreviewValue, true);
 
     return childID;
@@ -109,8 +133,22 @@ namespace Window {
     // Update the windows dimensions
     win->dims = pkt.dims;
 
+    LOG_DEBUG(F("Win Type is: %d\r\n"), win->type);
+
     // Redraw the window
-    win->drawBox();
+    switch ((ComponentType)win->type) {
+      case STRING:
+        win->drawBox();
+        break;
+      case BAR: 
+      {
+        LOG_DEBUG(F("Updating UIBar dimensions\r\n"));
+        UIBar* bar = (UIBar*)win;
+        bar->drawBox();
+        break;
+      }
+    }
+
     win->Redraw();
 
     return true;
@@ -137,7 +175,19 @@ namespace Window {
     win->decor = pkt.data.decor;
     setTitleWithOpts(&pkt.data, win, pkt.WinID);
 
-    win->drawBox();
+    switch ((ComponentType)win->type) {
+      case STRING:
+        win->drawBox();
+        break;
+      case BAR:
+      {
+        LOG_DEBUG(F("Updating UIBar\r\n"));
+        UIBar* bar = (UIBar*)win;
+        bar->drawBox();
+        break;
+      }
+    }
+
     win->Update(pkt.data.opts.PreviewValue, true);
 
     return true;
