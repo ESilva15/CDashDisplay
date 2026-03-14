@@ -4,7 +4,6 @@
 #include "communication/commands.h"
 #include <cstdint>
 #include <Arduino.h>
-#include <cstring>
 
 namespace WalkieTalkie {
   typedef enum {
@@ -16,6 +15,7 @@ namespace WalkieTalkie {
     RecvETX = 5,
   } RecvState;
 
+  static uint8_t tempLenBuffer[2];
   inline uint8_t buffer[4096];
   inline int16_t bufferIndex = 0;
   inline RecvState state = WaitingSTX;

@@ -212,10 +212,11 @@ namespace Window {
 };
 
 namespace Data {
+  char buffer[128];
+  char strValue[128];
+
   uint8_t Parse(uint8_t *payload, size_t payloadSize, Curses::Screen* mainScreen) {
     uint16_t curPos = 0;
-
-    char buffer[128];
 
     for (; curPos < payloadSize;) {
       // Get the data type from the current position
@@ -228,7 +229,7 @@ namespace Data {
       switch (type) {
         case DataTypeUINT8: {
           uint8_t value = payload[curPos + 1];
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
 
           sprintf(buffer, "%d", value);
 
@@ -237,7 +238,7 @@ namespace Data {
         }
         case DataTypeINT8: {
           int8_t value = (int8_t)payload[curPos + 1];
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
 
           sprintf(buffer, "%d", value);
 
@@ -248,7 +249,7 @@ namespace Data {
           uint16_t value;
           memcpy(&value, payload + curPos + 1, 2);
 
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%d", value);
 
           curPos += 3; // 1 (Type) + 2 (Value)
@@ -257,7 +258,7 @@ namespace Data {
         case DataTypeINT16: {
           int16_t value;
           memcpy(&value, payload + curPos + 1, 2);
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%d", value);
 
           curPos += 3;
@@ -266,7 +267,7 @@ namespace Data {
         case DataTypeUINT32: {
           uint32_t value;
           memcpy(&value, payload + curPos + 1, 4);
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%d", value);
 
           curPos += 5; // 1 (Type) + 4 (Value)
@@ -275,7 +276,7 @@ namespace Data {
         case DataTypeINT32: {
           int32_t value;
           memcpy(&value, payload + curPos + 1, 4);
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%d", value);
 
           curPos += 5;
@@ -284,7 +285,7 @@ namespace Data {
         case DataTypeUINT64: {
           uint64_t value;
           memcpy(&value, payload + curPos + 1, 8);
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%ld", value);
 
           curPos += 9; // 1 (Type) + 8 (Value)
@@ -293,7 +294,7 @@ namespace Data {
         case DataTypeINT64: {
           int64_t value;
           memcpy(&value, payload + curPos + 1, 8);
-          LOG_WARN(F("RECEIVED [%2d]: %d\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %d\r\n"), type, wID, value);
           sprintf(buffer, "%ld", value);
 
           curPos += 9;
@@ -301,7 +302,7 @@ namespace Data {
         }
         case DataTypeCHAR: {
           uint8_t value = payload[curPos + 1];
-          LOG_WARN(F("RECEIVED [%2d]: %c\n"), wID, value);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %c\r\n"), type, wID, value);
           sprintf(buffer, "%c", value);
 
           curPos += 2;
@@ -310,11 +311,10 @@ namespace Data {
         case DataTypeSTRING: {
           // Strings have: Type (1), Len (1), Data (Len)
           uint8_t len = payload[curPos + 1];
-          char strValue[len + 1];
           memcpy(strValue, payload + curPos + 2, len);
           strValue[len] = '\0'; // Null terminator
                                 //
-          LOG_WARN(F("RECEIVED [%2d] [%d]: %s\n"), wID, len, strValue);
+          LOG_DEBUG(F("[0x%02X] RECEIVED [%2d]: %s\r\n"), type, wID, strValue);
           sprintf(buffer, "%s", strValue);
           
           curPos += (2 + len); 
@@ -323,7 +323,7 @@ namespace Data {
         default:
           // If we hit an unknown type, we are desynced. 
           // Better to stop than to read garbage.
-          LOG_ERROR(F("Unknown Type 0x%02X at pos %d"), type, curPos);
+          LOG_ERROR(F("Unknown Type 0x%02X at pos %d\r\n"), type, curPos);
           continue;
       }
 

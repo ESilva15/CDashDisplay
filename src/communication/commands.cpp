@@ -12,6 +12,8 @@ char* CommandToStr(Command id) {
       return (char*)"CmdDestroyWindow";
     case CmdUpdateWinDims:
       return (char*)"CmdUpdateWinDims";
+    case CMDData:
+      return (char*)"CMDData";
     default:
       return (char*)"CmdUnknown";
   }

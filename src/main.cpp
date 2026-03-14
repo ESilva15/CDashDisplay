@@ -93,12 +93,32 @@ void setup() {
 }
 
 const uint16_t PayloadMax = 2056;
+uint8_t payload[PayloadMax] = {0};
+char lineBuffer[64]; // Enough for "XX XX XX XX XX XX XX XX "
+                     //
+void print_memory_stats() {
+    multi_heap_info_t info;
+    
+    // MALLOC_CAP_8BIT ensures we are looking at memory capable of 
+    // storing data (Internal RAM + PSRAM if available)
+    heap_caps_get_info(&info, MALLOC_CAP_8BIT);
+
+    size_t total_free = info.total_free_bytes;
+    size_t total_allocated = info.total_allocated_bytes;
+    size_t total_size = total_free + total_allocated;
+    size_t min_free = info.minimum_free_bytes; // "Low water mark"
+
+    LOG_INFO(F("Memory Stats:\r\n"));
+    LOG_INFO(F("  Total:     %u bytes\r\n"), total_size);
+    LOG_INFO(F("  Used:      %u bytes\r\n"), total_allocated);
+    LOG_INFO(F("  Free:      %u bytes\r\n"), total_free);
+    LOG_INFO(F("  Min Free:  %u bytes (Historic peak usage)\r\n"), min_free);
+}
 
 void loop(void) {
   uint64_t cur = millis();
 
   Command cmd = CmdUnknown;
-  uint8_t payload[PayloadMax] = {0};
 
   if (Serial.available() > 0) {
     int16_t resp = WalkieTalkie::RecvStream(&cmd, payload, PayloadMax);
@@ -106,12 +126,14 @@ void loop(void) {
       LOG_WARN(F("Failed to receive data from serial"));
       return;
     } else if (resp == 0) {
-      LOG_INFO(F("No data to receive"));
+      LOG_INFO(F("No data to receive\r\n"));
       return;
     }
 
     LOG_INFO(F("Command: %s\n"), CommandToStr(cmd));
     LOG_INFO(F("Response Payload Len: %d\n"), resp);
+
+    print_memory_stats();
 
     switch(cmd) {
       case CmdRequestID:
@@ -163,16 +185,8 @@ void loop(void) {
         break;
       }
       case CMDData: {
-        // Data groups of: windowData {
-        //   idx  int16 4  bytes
-        //   data char* 32 bytes
-        // }
-        // Packet will be: Data {
-        //   [windowData]
-        // }
-        LOG_WARN(F("Data Received: %d bytes\n"), resp);
+        LOG_WARN(F("Data Received: %d bytes\r\n"), resp);
         
-        char lineBuffer[32]; // Enough for "XX XX XX XX XX XX XX XX "
         int pos = 0;
         
         for (int k = 0; k < resp; k++) {
@@ -184,14 +198,14 @@ void loop(void) {
             if ((k + 1) % 8 == 0 || k == resp - 1) {
                 // Send the completed line to the logger
                 // We use LOG_DEBUG or similar so we don't spam [WARN] on every line
-                Logger::Printf(F("%s\n"), lineBuffer);
+                LOG_DEBUG(F("%s\r\n"), lineBuffer);
                 
                 // Reset buffer position for the next line
                 pos = 0;
                 memset(lineBuffer, 0, sizeof(lineBuffer));
             }
         }
-        LOG_WARN(F("\n"));
+        LOG_DEBUG(F("\r\n"));
 
         Data::Parse(payload, resp, &mainScreen);
 

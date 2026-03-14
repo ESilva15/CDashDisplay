@@ -61,7 +61,7 @@ namespace WalkieTalkie {
     return 0;
   }
 
-  static inline size_t RecvETXRoutine(uint8_t *payload, byte *b) {
+  static inline int RecvETXRoutine(uint8_t *payload, byte *b) {
     LOG_TRACE(F("READING ETX\n"));
     state = WaitingSTX;
 
@@ -109,12 +109,12 @@ namespace WalkieTalkie {
         }
 
         case RecvETX: {
-          return RecvETXRoutine(payload, &byte);
+          result = RecvETXRoutine(payload, &byte);
           break;
         }
       }
     }
 
-    return 0;
+    return result;
   }
 };
