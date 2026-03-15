@@ -130,10 +130,10 @@ void loop(void) {
       return;
     }
 
-    LOG_INFO(F("Command: %s\n"), CommandToStr(cmd));
-    LOG_INFO(F("Response Payload Len: %d\n"), resp);
+    LOG_DEBUG(F("Command: %s\n"), CommandToStr(cmd));
+    LOG_DEBUG(F("Response Payload Len: %d\n"), resp);
 
-    print_memory_stats();
+    // print_memory_stats();
 
     switch(cmd) {
       case CmdRequestID:
@@ -185,7 +185,7 @@ void loop(void) {
         break;
       }
       case CMDData: {
-        LOG_WARN(F("Data Received: %d bytes\r\n"), resp);
+        LOG_DEBUG(F("Data Received: %d bytes\r\n"), resp);
         
         int pos = 0;
         
