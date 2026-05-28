@@ -10,7 +10,7 @@
 #define PWM_FREQUENCY 5000
 #define PWM_RESOLUTION 12
 
-#define SCREEN_ORIENTATION 2
+#define SCREEN_ORIENTATION 4
 #define SCREEN_LANDSCAPE
 
 /* More display class:
