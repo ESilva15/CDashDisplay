@@ -180,7 +180,7 @@ void loop(void) {
           break;
         }
 
-        LOG_INFO(F("Succesfully destroy window: %d\n"), destroyedWinID);
+        LOG_INFO(F("Succesfully destroyed window: %d\n"), destroyedWinID);
 
         break;
       }
